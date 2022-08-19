@@ -18,7 +18,7 @@ class GPRegressor(GPR):
     def predict_uncertainty(self, pred_data):
         X = pred_data.X
         if self.uncertainty_type == 'value':
-            preds = self.predict(X)
+            preds = self.predict(X).reshape(-1, 1)
             preds = np.concatenate([preds, 1 - preds], axis=1)
             return 0.25 - np.var(preds, axis=1)
         elif self.uncertainty_type == 'uncertainty':
