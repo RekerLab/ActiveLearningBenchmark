@@ -118,7 +118,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
             from alb.models.support_vector.SupportVectorClassifier import SVClassifier
-            return SVClassifier(kernel=kernel)
+            return SVClassifier(kernel=kernel, probability=True)
         else:
             raise ValueError(f'unknown model: {model}')
     elif data_format == 'chemprop':
@@ -164,7 +164,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
             from alb.models.support_vector.SupportVectorClassifier import SVClassifier
-            return SVClassifier(kernel=kernel)
+            return SVClassifier(kernel=kernel, probability=True)
         else:
             raise ValueError(f'unknown model: {model}')
     else:
