@@ -8,7 +8,6 @@ from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple
 from logging import Logger
 import json
 import pandas as pd
-from sklearn.gaussian_process.kernels import RBF, DotProduct
 from mgktools.features_mol import FeaturesGenerator
 from alb.logging import create_logger
 from alb.data.utils import split_data
@@ -139,31 +138,6 @@ class DatasetArgs(CommonArgs):
             df_al.iloc[pool_index].to_csv('%s/pool_init.csv' % self.save_dir, index=False)
 
 
-class MarginalizedGraphKernelArgs(Tap):
-    mgk_type: Literal['graph'] = None
-    """The type of graph kernel to use."""
-    mgk_hyperparameters_file: str = None
-    """hyperparameters file for graph kernel."""
-
-
-class FingerprintsKernelArgs(Tap):
-    fingerprints_kernel_type: Literal['rbf', 'linear'] = None
-    """The type of fingerprints kernel to use."""
-    features_hyperparameters: List[float] = None
-    """hyperparameters for fingperprints."""
-    features_hyperparameters_file: str = None
-    """JSON file contains features hyperparameters"""
-
-
-class KernelArgs(CommonArgs, MarginalizedGraphKernelArgs, FingerprintsKernelArgs):
-    pre_computed: bool = False
-    """Whether use the pre-computed kernel."""
-
-    @property
-    def kernel_pkl(self) -> str:
-        return os.path.join(self.save_dir, 'kernel.pkl')
-
-
 class ModelArgs(Tap):
     model_config_selector: str
     """config file contain all information of the machine learning model."""
@@ -189,7 +163,7 @@ class ModelArgs(Tap):
             return json.loads(open(self.model_config_evaluator).read())
 
 
-class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
+class ActiveLearningArgs(DatasetArgs, ModelArgs):
     save_dir: str
     """The output directory."""
     n_jobs: int = 1
@@ -235,6 +209,7 @@ class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
                 frzn_ffn_layers=self.model_config_selector_dict.get('frzn_ffn_layers') or 0,
                 freeze_first_only=self.model_config_selector_dict.get('freeze_first_only') or False,
                 kernel=self.kernel_selector,
+                uncertainty_type=self.model_config_selector_dict.get('uncertainty_type'),
                 n_jobs=self.n_jobs,
                 seed=self.seed,
                 logger=self.logger
@@ -274,6 +249,7 @@ class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
                     frzn_ffn_layers=self.model_config_evaluator_dict.get('frzn_ffn_layers') or 0,
                     freeze_first_only=self.model_config_evaluator_dict.get('freeze_first_only') or False,
                     kernel=self.kernel_evaluator,
+                    uncertainty_type=self.model_config_evaluator_dict.get('uncertainty_type'),
                     n_jobs=self.n_jobs,
                     seed=self.seed,
                     logger=self.logger
@@ -285,41 +261,47 @@ class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
     @property
     def data_train_selector(self):
         if not hasattr(self, '_data_train_selector'):
-            self._data_train_selector = get_data(data_format=self.model_config_selector_dict['data_format'],
-                                                 path='%s/train_init.csv' % self.save_dir,
-                                                 pure_columns=self.pure_columns,
-                                                 mixture_columns=self.mixture_columns,
-                                                 target_columns=self.target_columns,
-                                                 feature_columns=self.feature_columns,
-                                                 features_generator=self.features_generator_selector,
-                                                 n_jobs=self.n_jobs)
+            self._data_train_selector = get_data(
+                data_format=self.model_config_selector_dict['data_format'],
+                path='%s/train_init.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_selector,
+                graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
+                n_jobs=self.n_jobs)
         return self._data_train_selector
 
     @property
     def data_pool_selector(self):
         if not hasattr(self, '_data_pool_selector'):
-            self._data_pool_selector = get_data(data_format=self.model_config_selector_dict['data_format'],
-                                                path='%s/pool_init.csv' % self.save_dir,
-                                                pure_columns=self.pure_columns,
-                                                mixture_columns=self.mixture_columns,
-                                                target_columns=self.target_columns,
-                                                feature_columns=self.feature_columns,
-                                                features_generator=self.features_generator_selector,
-                                                n_jobs=self.n_jobs)
+            self._data_pool_selector = get_data(
+                data_format=self.model_config_selector_dict['data_format'],
+                path='%s/pool_init.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_selector,
+                graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
+                n_jobs=self.n_jobs)
         return self._data_pool_selector
 
     @property
     def data_train_evaluator(self):
         if self.yoked_learning:
             if not hasattr(self, '_data_train_evaluator'):
-                self._data_train_evaluator = get_data(data_format=self.model_config_evaluator_dict['data_format'],
-                                                      path='%s/train_init.csv' % self.save_dir,
-                                                      pure_columns=self.pure_columns,
-                                                      mixture_columns=self.mixture_columns,
-                                                      target_columns=self.target_columns,
-                                                      feature_columns=self.feature_columns,
-                                                      features_generator=self.features_generator_evaluator,
-                                                      n_jobs=self.n_jobs)
+                self._data_train_evaluator = get_data(
+                    data_format=self.model_config_evaluator_dict['data_format'],
+                    path='%s/train_init.csv' % self.save_dir,
+                    pure_columns=self.pure_columns,
+                    mixture_columns=self.mixture_columns,
+                    target_columns=self.target_columns,
+                    feature_columns=self.feature_columns,
+                    features_generator=self.features_generator_evaluator,
+                    graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
+                    n_jobs=self.n_jobs)
             return self._data_train_evaluator
         else:
             return self.data_train_selector
@@ -328,14 +310,16 @@ class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
     def data_pool_evaluator(self):
         if self.yoked_learning:
             if not hasattr(self, '_data_pool_evaluator'):
-                self._data_pool_evaluator = get_data(data_format=self.model_config_evaluator_dict['data_format'],
-                                                     path='%s/pool_init.csv' % self.save_dir,
-                                                     pure_columns=self.pure_columns,
-                                                     mixture_columns=self.mixture_columns,
-                                                     target_columns=self.target_columns,
-                                                     feature_columns=self.feature_columns,
-                                                     features_generator=self.features_generator_evaluator,
-                                                     n_jobs=self.n_jobs)
+                self._data_pool_evaluator = get_data(
+                    data_format=self.model_config_evaluator_dict['data_format'],
+                    path='%s/pool_init.csv' % self.save_dir,
+                    pure_columns=self.pure_columns,
+                    mixture_columns=self.mixture_columns,
+                    target_columns=self.target_columns,
+                    feature_columns=self.feature_columns,
+                    features_generator=self.features_generator_evaluator,
+                    graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
+                    n_jobs=self.n_jobs)
             return self._data_pool_evaluator
         else:
             return self.data_pool_selector
@@ -343,41 +327,47 @@ class ActiveLearningArgs(DatasetArgs, KernelArgs, ModelArgs):
     @property
     def data_val_evaluator(self):
         if not hasattr(self, '_data_val_evaluator'):
-            self._data_val_evaluator = get_data(data_format=self.model_config_evaluator_dict['data_format'],
-                                                path='%s/val.csv' % self.save_dir,
-                                                pure_columns=self.pure_columns,
-                                                mixture_columns=self.mixture_columns,
-                                                target_columns=self.target_columns,
-                                                feature_columns=self.feature_columns,
-                                                features_generator=self.features_generator_evaluator,
-                                                n_jobs=self.n_jobs)
+            self._data_val_evaluator = get_data(
+                data_format=self.model_config_evaluator_dict['data_format'],
+                path='%s/val.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_evaluator,
+                graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
+                n_jobs=self.n_jobs)
         return self._data_val_evaluator
 
     @property
     def data_full_selector(self):
-        if not hasattr(self, '_data_full'):
-            self._data_full_selector = get_data(data_format=self.model_config_selector_dict['data_format'],
-                                                path=self.data_path,
-                                                pure_columns=self.pure_columns,
-                                                mixture_columns=self.mixture_columns,
-                                                target_columns=self.target_columns,
-                                                feature_columns=self.feature_columns,
-                                                features_generator=self.features_generator_selector,
-                                                n_jobs=self.n_jobs)
+        if not hasattr(self, '_data_full_selector'):
+            self._data_full_selector = get_data(
+                data_format=self.model_config_selector_dict['data_format'],
+                path=self.data_path,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_selector,
+                graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
+                n_jobs=self.n_jobs)
         return self._data_full_selector
 
     @property
     def data_full_evaluator(self):
         if self.yoked_learning:
             if not hasattr(self, '_data_full_evaluator'):
-                self._data_full_evaluator = get_data(data_format=self.model_config_evaluator_dict['data_format'],
-                                                     path=self.data_path,
-                                                     pure_columns=self.pure_columns,
-                                                     mixture_columns=self.mixture_columns,
-                                                     target_columns=self.target_columns,
-                                                     feature_columns=self.feature_columns,
-                                                     features_generator=self.features_generator_evaluator,
-                                                     n_jobs=self.n_jobs)
+                self._data_full_evaluator = get_data(
+                    data_format=self.model_config_evaluator_dict['data_format'],
+                    path=self.data_path,
+                    pure_columns=self.pure_columns,
+                    mixture_columns=self.mixture_columns,
+                    target_columns=self.target_columns,
+                    feature_columns=self.feature_columns,
+                    features_generator=self.features_generator_evaluator,
+                    graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
+                    n_jobs=self.n_jobs)
             return self._data_full_evaluator
         else:
             return self.data_full_selector

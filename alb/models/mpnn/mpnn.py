@@ -244,7 +244,8 @@ class MPNN:
         preds = predict(
             model=self.model,
             data_loader=pred_data_loader,
-            scaler=self.scaler
+            scaler=self.scaler,
+            return_unc_parameters=True
         )
         if self.args.dataset_type == 'classification':
             preds = np.asarray(preds)
@@ -255,10 +256,10 @@ class MPNN:
         elif self.args.dataset_type == 'regression':
             if self.model.loss_function == "mve":
                 preds, var = preds
-                return var
+                return np.array(var).ravel()
             elif self.args.loss_function == 'evidential':
                 preds, lambdas, alphas, betas = preds
-                return betas / (lambdas * (alphas - 1))
+                return (np.array(betas) / (np.array(lambdas) * (np.array(alphas) - 1))).ravel()
             else:
                 raise ValueError()
         else:
@@ -279,10 +280,6 @@ class MPNN:
         if self.args.dataset_type in ['classification', 'multiclass']:
             return np.asarray(preds).ravel()
         elif self.args.dataset_type == 'regression':
-            if self.model.loss_function == "mve":
-                preds, var = preds
-            elif self.args.loss_function == 'evidential':
-                preds, lambdas, alphas, betas = preds
-            return preds
+            return np.asarray(preds).ravel()
         else:
             raise ValueError()

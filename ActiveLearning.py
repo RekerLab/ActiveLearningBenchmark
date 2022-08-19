@@ -28,9 +28,12 @@ def main(args: ActiveLearningArgs) -> None:
                                        metrics=args.metrics,
                                        learning_type=args.learning_type,
                                        model_selector=args.model_selector,
+                                       model_evaluator=None,
                                        dataset_train_selector=args.data_train_selector,
                                        dataset_pool_selector=args.data_pool_selector,
                                        dataset_val_evaluator=args.data_val_evaluator,
+                                       dataset_train_evaluator=None,
+                                       dataset_pool_evaluator=None,
                                        evaluate_stride=args.evaluate_stride)
     active_learner.run()
 

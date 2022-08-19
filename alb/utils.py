@@ -28,6 +28,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
              target_columns: List[str] = None,
              feature_columns: List[str] = None,
              features_generator: List[str] = None,
+             graph_kernel_type: Literal['graph', 'pre-computed'] = None,
              n_jobs: int = 8):
     if data_format == 'fingerprints':
         from alb.data.utils import get_data
@@ -47,6 +48,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                         target_columns=target_columns,
                         features_generator=features_generator)
     elif data_format == 'mgktools':
+        assert graph_kernel_type is not None
         from mgktools.data.data import get_data
         return get_data(path=path,
                         pure_columns=pure_columns,
@@ -56,6 +58,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                         features_generator=features_generator,
                         features_combination='concat',
                         mixture_type='single_graph',
+                        graph_kernel_type=graph_kernel_type,
                         n_jobs=n_jobs)
     else:
         raise ValueError('input error')
@@ -90,6 +93,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
               frzn_ffn_layers: int = 0,
               freeze_first_only: bool = False,
               kernel=None,
+              uncertainty_type: Literal['value', 'uncertainty'] = None,
               n_jobs: int = 8,
               seed: int = 0,
               logger: Logger = None,
@@ -104,8 +108,9 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                 return RFClassifier()
         elif model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
+            assert uncertainty_type is not None
             from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
-            return GPRegressor(kernel=kernel)
+            return GPRegressor(kernel=kernel, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
             from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
@@ -149,8 +154,9 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
     elif data_format == 'mgktools':
         if model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
+            assert uncertainty_type is not None
             from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
-            return GPRegressor(kernel=kernel)
+            return GPRegressor(kernel=kernel, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
             from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
