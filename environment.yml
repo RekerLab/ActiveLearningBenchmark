@@ -19,4 +19,3 @@ dependencies:
     - git+https://github.com/Xiangyan93/chemprop.git@alb
     - rxntools>=0.0.2
     - scipy>=1.8.1
-    - chemprop>=1.5.2
