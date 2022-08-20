@@ -108,6 +108,7 @@ class MPNN:
         args.seed = seed
         args.process_args()
         self.args = args
+        self.features_scaler = None
         self.logger = logger
 
     def fit(self, train_data):
@@ -127,9 +128,7 @@ class MPNN:
             args.train_class_sizes = train_class_sizes
 
         if args.features_scaling:
-            features_scaler = train_data.normalize_features(replace_nan_token=0)
-        else:
-            features_scaler = None
+            self.features_scaler = train_data.normalize_features(replace_nan_token=0)
 
         atom_descriptor_scaler = None
         bond_feature_scaler = None
@@ -236,6 +235,7 @@ class MPNN:
 
     def predict_uncertainty(self, pred_data):
         args = self.args
+        pred_data.normalize_features(self.features_scaler)
         pred_data_loader = MoleculeDataLoader(
             dataset=pred_data,
             batch_size=args.batch_size,
@@ -267,6 +267,7 @@ class MPNN:
 
     def predict_value(self, pred_data):
         args = self.args
+        pred_data.normalize_features(self.features_scaler)
         pred_data_loader = MoleculeDataLoader(
             dataset=pred_data,
             batch_size=args.batch_size,
