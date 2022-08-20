@@ -91,6 +91,21 @@ class DatasetArgs(CommonArgs):
             self.pure_columns = ['smiles']
             self.target_columns = ['logSolubility']
             self.dataset_type = 'regression'
+        elif self.data_public == 'lipo':
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['smiles']
+            self.target_columns = ['lipo']
+            self.dataset_type = 'regression'
+        elif self.data_public == 'pdbbind_refined':
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['smiles']
+            self.target_columns = ['-logKd/Ki']
+            self.dataset_type = 'regression'
+        elif self.data_public == 'pdbbind_full':
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['smiles']
+            self.target_columns = ['-logKd/Ki']
+            self.dataset_type = 'regression'
         elif self.data_public == 'clintox':
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
             self.pure_columns = ['smiles']
@@ -189,6 +204,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 num_tasks=len(self.target_columns),
                 multiclass_num_classes=self.model_config_selector_dict.get('loss_function') or 3,
                 features_generator=self.features_generator_selector,
+                no_features_scaling=self.model_config_selector_dict.get('no_features_scaling') or False,
                 features_only=self.model_config_selector_dict.get('features_only') or False,
                 features_size=self.data_train_selector.features_size(),
                 epochs=self.model_config_selector_dict.get('epochs') or 30,
@@ -229,6 +245,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     num_tasks=len(self.target_columns),
                     multiclass_num_classes=self.model_config_evaluator_dict.get('loss_function') or 3,
                     features_generator=self.features_generator_evaluator,
+                    no_features_scaling=self.model_config_evaluator_dict.get('no_features_scaling') or False,
                     features_only=self.model_config_evaluator_dict.get('features_only') or False,
                     features_size=self.data_train_evaluator.features_size(),
                     epochs=self.model_config_evaluator_dict.get('epochs') or 30,

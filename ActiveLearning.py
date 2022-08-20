@@ -7,7 +7,8 @@ from alb.al.learner import ActiveLearner
 
 def main(args: ActiveLearningArgs) -> None:
     # save args into a json file.
-    args.save(os.path.join(args.save_dir, 'args.json'), skip_unpicklable=True)
+    # args.save(os.path.join(args.save_dir, 'args.json'), skip_unpicklable=True)
+    # args.save(os.path.join(args.save_dir, 'args_test.json'), with_reproducibility=False, skip_unpicklable=True)
     # active learning
     if args.yoked_learning:
         active_learner = ActiveLearner(save_dir=args.save_dir,

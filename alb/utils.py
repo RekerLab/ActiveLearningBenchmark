@@ -73,6 +73,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
               num_tasks: int = 1,
               multiclass_num_classes: int = 3,
               features_generator=None,
+              no_features_scaling: bool = False,
               features_only: bool = False,
               features_size: int = 0,
               epochs: int = 30,
@@ -110,11 +111,11 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None
             from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
-            return GPRegressor(kernel=kernel, uncertainty_type=uncertainty_type)
+            return GPRegressor(kernel=kernel, optimizer=None, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
             from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
-            return GPClassifier(kernel=kernel)
+            return GPClassifier(kernel=kernel, optimizer=None)
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
             from alb.models.support_vector.SupportVectorClassifier import SVClassifier
@@ -129,6 +130,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                     num_tasks=num_tasks,
                     multiclass_num_classes=multiclass_num_classes,
                     features_generator=features_generator,
+                    no_features_scaling=no_features_scaling,
                     features_only=features_only,
                     features_size=features_size,
                     epochs=epochs,
@@ -156,11 +158,11 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None
             from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
-            return GPRegressor(kernel=kernel, uncertainty_type=uncertainty_type)
+            return GPRegressor(kernel=kernel, optimizer=None, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
             from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
-            return GPClassifier(kernel=kernel)
+            return GPClassifier(kernel=kernel, optimizer=None)
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
             from alb.models.support_vector.SupportVectorClassifier import SVClassifier
@@ -216,6 +218,7 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     kernel_pkl=kernel_pkl_path
                 ).kernel
             else:
+                dataset.graph_kernel_type = 'graph'
                 kernel_config = get_kernel_config(
                     dataset=dataset,
                     graph_kernel_type='graph',
@@ -225,7 +228,6 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     rbf_length_scale_bounds="fixed",
                     features_hyperparameters_file=features_hyperparameters_file
                 )
-                dataset.graph_kernel_type = 'graph'
                 kernel_dict = kernel_config.get_kernel_dict(dataset.X, dataset.X_repr.ravel())
                 dataset.graph_kernel_type = 'pre-computed'
                 pickle.dump(kernel_dict, open(kernel_pkl_path, 'wb'), protocol=4)

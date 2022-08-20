@@ -30,6 +30,7 @@ class MPNN:
                  num_tasks: int = 1,
                  multiclass_num_classes: int = 3,
                  features_generator=None,
+                 no_features_scaling: bool = False,
                  features_only: bool = False,
                  features_size: int = 0,
                  epochs: int = 30,
@@ -85,6 +86,7 @@ class MPNN:
         args.num_tasks = num_tasks
         args.multiclass_num_classes = multiclass_num_classes
         args.features_generator = features_generator
+        args.no_features_scaling = no_features_scaling
         args.features_only = features_only
         args.features_size = features_size
         args.epochs = epochs

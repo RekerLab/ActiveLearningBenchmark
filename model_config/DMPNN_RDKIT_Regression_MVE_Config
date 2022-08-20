@@ -11,7 +11,5 @@
     "ensemble_size": 1,
     "fingerprints_class": [
         "rdkit_2d"
-    ],
-    "radius": 2,
-    "num_bits": 1024
+    ]
 }
