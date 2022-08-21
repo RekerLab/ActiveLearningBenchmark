@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import math
 from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple
 import copy
 import os
@@ -30,6 +31,20 @@ def get_data(path: str,
                                   n_jobs=n_jobs)
 
 
+def get_split_sizes(n_samples: int,
+                    split_ratio: List[float]):
+    if not np.isclose(sum(split_ratio), 1.0):
+        raise ValueError(f"Split split_ratio do not sum to 1. Received splits: {split_ratio}")
+    if any([size < 0 for size in split_ratio]):
+        raise ValueError(f"Split split_ratio must be non-negative. Received splits: {split_ratio}")
+
+    acc_ratio = np.cumsum([0.] + split_ratio)
+    split_sizes = [math.ceil(acc_ratio[i+1] * n_samples) - math.ceil(acc_ratio[i] * n_samples)
+                   for i in range(len(acc_ratio) - 1)]
+    assert sum(split_sizes) == n_samples
+    return split_sizes
+
+
 def split_data(smiles: List[str],
                targets: List = None,
                split_type: Literal['random', 'scaffold_order', 'scaffold_random', 'class'] = 'random',
@@ -43,15 +58,11 @@ def split_data(smiles: List[str],
     else:
         info = print
         warn = print
-    if not np.isclose(sum(sizes), 1.0):
-        raise ValueError(f"Split sizes do not sum to 1. Received splits: {sizes}")
-    if any([size < 0 for size in sizes]):
-        raise ValueError(f"Split sizes must be non-negative. Received splits: {sizes}")
 
     random = Random(seed)
     split_index = [[] for size in sizes]
     if split_type in ['scaffold_random', 'scaffold_order']:
-        index_size = [size * len(smiles) for size in sizes]
+        index_size = get_split_sizes(len(smiles), split_ratio=sizes)
         mols = [Chem.MolFromSmiles(s) for s in smiles]
         scaffold_to_indices = scaffold_to_smiles(mols, use_indices=True)
         index_sets = sorted(list(scaffold_to_indices.values()),
@@ -69,17 +80,19 @@ def split_data(smiles: List[str],
                     s_index += index_set
                     scaffold_count[i] += 1
                     break
-
+            else:
+                print(index_set, index_size)
         info(f'Total scaffolds = {len(scaffold_to_indices):,} | ')
         for i, count in enumerate(scaffold_count):
             info(f'split {i} scaffolds = {count:,} | ')
     elif split_type == 'random':
         indices = list(range(len(smiles)))
         random.shuffle(indices)
+        index_size = get_split_sizes(len(smiles), split_ratio=sizes)
         end = 0
-        for i, size in enumerate(sizes):
+        for i, size in enumerate(index_size):
             start = end
-            end = start + int(size * len(smiles))
+            end = start + size
             split_index[i] = indices[start:end]
     elif split_type == 'class':
         class_list = np.unique(targets)
