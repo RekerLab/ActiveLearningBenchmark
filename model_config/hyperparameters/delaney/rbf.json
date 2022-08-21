@@ -1,0 +1,11 @@
+{
+ "rbf_length_scale": [
+ 6.58312
+ ],
+ "rbf_length_scale_bounds": [
+  [
+   0.1,
+   10.0
+  ]
+ ]
+}

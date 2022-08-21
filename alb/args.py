@@ -226,6 +226,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 freeze_first_only=self.model_config_selector_dict.get('freeze_first_only') or False,
                 kernel=self.kernel_selector,
                 uncertainty_type=self.model_config_selector_dict.get('uncertainty_type'),
+                alpha=self.model_config_selector_dict.get('alpha'),
                 n_jobs=self.n_jobs,
                 seed=self.seed,
                 logger=self.logger
@@ -267,6 +268,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     freeze_first_only=self.model_config_evaluator_dict.get('freeze_first_only') or False,
                     kernel=self.kernel_evaluator,
                     uncertainty_type=self.model_config_evaluator_dict.get('uncertainty_type'),
+                    alpha=self.model_config_evaluator_dict.get('alpha'),
                     n_jobs=self.n_jobs,
                     seed=self.seed,
                     logger=self.logger
