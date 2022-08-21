@@ -65,7 +65,7 @@ def split_data(smiles: List[str],
                 random.shuffle(index)
             for i in index:
                 s_index = split_index[i]
-                if len(s_index) + len(index_set) < index_size[i]:
+                if len(s_index) + len(index_set) <= index_size[i]:
                     s_index += index_set
                     scaffold_count[i] += 1
                     break
@@ -102,4 +102,5 @@ def split_data(smiles: List[str],
                 split_index[1].append(i)
     else:
         raise ValueError(f'split_type "{split_type}" not supported.')
+    assert sum([len(i) for i in split_index]) == len(smiles)
     return split_index
