@@ -158,6 +158,8 @@ class ModelArgs(Tap):
     """config file contain all information of the machine learning model."""
     model_config_evaluator: str = None
     """config file contain all information of the machine learning model for performance evaluation."""
+    model_config_extra_evaluators: List[str] = None
+    """A list of config files contain all information of the machine learning model for performance evaluation."""
 
     @property
     def yoked_learning(self) -> bool:
@@ -176,6 +178,13 @@ class ModelArgs(Tap):
             return self.model_config_selector_dict
         else:
             return json.loads(open(self.model_config_evaluator).read())
+
+    @property
+    def model_config_extra_evaluators_dict(self) -> List[Dict]:
+        if self.model_config_extra_evaluators is None:
+            return []
+        else:
+            return [json.loads(open(m).read()) for m in self.model_config_extra_evaluators]
 
 
 class ActiveLearningArgs(DatasetArgs, ModelArgs):
@@ -278,6 +287,47 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             return self.model_selector
 
     @property
+    def model_extra_evaluators(self):
+        if not hasattr(self, '_model_extra_evaluators'):
+            self._model_extra_evaluators = [get_model(
+                data_format=model_config['data_format'],
+                dataset_type=self.dataset_type,
+                model=model_config.get('model'),
+                save_dir='%s/extra_evaluator_%d' % (self.save_dir, i),
+                loss_function=model_config.get('loss_function'),
+                num_tasks=len(self.target_columns),
+                multiclass_num_classes=model_config.get('loss_function') or 3,
+                features_generator=self.features_generator_extra_evaluators[i],
+                no_features_scaling=model_config.get('no_features_scaling') or False,
+                features_only=model_config.get('features_only') or False,
+                features_size=self.data_train_extra_evaluators[i].features_size(),
+                epochs=model_config.get('epochs') or 30,
+                depth=model_config.get('depth') or 3,
+                hidden_size=model_config.get('hidden_size') or 300,
+                ffn_num_layers=model_config.get('ffn_num_layers') or 2,
+                ffn_hidden_size=model_config.get('ffn_hidden_size'),
+                dropout=model_config.get('dropout') or 0.0,
+                batch_size=model_config.get('batch_size') or 50,
+                ensemble_size=model_config.get('ensemble_size') or 1,
+                number_of_molecules=model_config.get('number_of_molecules') or 1,
+                mpn_shared=model_config.get('mpn_shared') or False,
+                atom_messages=model_config.get('atom_messages') or False,
+                undirected=model_config.get('undirected') or False,
+                class_balance=model_config.get('class_balance') or False,
+                checkpoint_dir=model_config.get('checkpoint_dir'),
+                checkpoint_frzn=model_config.get('checkpoint_frzn'),
+                frzn_ffn_layers=model_config.get('frzn_ffn_layers') or 0,
+                freeze_first_only=model_config.get('freeze_first_only') or False,
+                kernel=self.kernel_extra_evaluators[i],
+                uncertainty_type=model_config.get('uncertainty_type'),
+                alpha=model_config.get('alpha'),
+                n_jobs=self.n_jobs,
+                seed=self.seed,
+                logger=self.logger
+            ) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._model_extra_evaluators
+
+    @property
     def data_train_selector(self):
         if not hasattr(self, '_data_train_selector'):
             self._data_train_selector = get_data(
@@ -359,6 +409,51 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
         return self._data_val_evaluator
 
     @property
+    def data_train_extra_evaluators(self):
+        if not hasattr(self, '_data_train_extra_evaluators'):
+            self._data_train_extra_evaluators = [get_data(
+                data_format=model_config['data_format'],
+                path='%s/train_init.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_extra_evaluators[i],
+                graph_kernel_type=model_config.get('graph_kernel_type'),
+                n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._data_train_extra_evaluators
+
+    @property
+    def data_pool_extra_evaluators(self):
+        if not hasattr(self, '_data_pool_extra_evaluators'):
+            self._data_pool_extra_evaluators = [get_data(
+                data_format=model_config['data_format'],
+                path='%s/pool_init.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_extra_evaluators[i],
+                graph_kernel_type=model_config.get('graph_kernel_type'),
+                n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._data_pool_extra_evaluators
+
+    @property
+    def data_val_extra_evaluators(self):
+        if not hasattr(self, '_data_val_extra_evaluators'):
+            self._data_val_extra_evaluators = [get_data(
+                data_format=model_config['data_format'],
+                path='%s/val.csv' % self.save_dir,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_extra_evaluators[i],
+                graph_kernel_type=model_config.get('graph_kernel_type'),
+                n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._data_val_extra_evaluators
+
+    @property
     def data_full_selector(self):
         if not hasattr(self, '_data_full_selector'):
             self._data_full_selector = get_data(
@@ -392,6 +487,21 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             return self.data_full_selector
 
     @property
+    def data_full_extra_evaluators(self) -> List:
+        if not hasattr(self, '_data_full_extra_evaluators'):
+            self._data_full_extra_evaluators = [get_data(
+                data_format=model_config['data_format'],
+                path=self.data_path,
+                pure_columns=self.pure_columns,
+                mixture_columns=self.mixture_columns,
+                target_columns=self.target_columns,
+                feature_columns=self.feature_columns,
+                features_generator=self.features_generator_extra_evaluators[i],
+                graph_kernel_type=model_config.get('graph_kernel_type'),
+                n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._data_full_extra_evaluators
+
+    @property
     def features_generator_selector(self) -> Optional[List[FeaturesGenerator]]:
         fingerprints_class = self.model_config_selector_dict.get('fingerprints_class')
         radius = self.model_config_selector_dict.get('radius')
@@ -419,6 +529,21 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             return self.features_generator_selector
 
     @property
+    def features_generator_extra_evaluators(self) -> Optional[List[List[FeaturesGenerator]]]:
+        results = []
+        for model_config in self.model_config_extra_evaluators_dict:
+            fingerprints_class = model_config.get('fingerprints_class')
+            radius = model_config.get('radius')
+            num_bits = model_config.get('num_bits')
+            if fingerprints_class is None:
+                results.append(None)
+            else:
+                results.append([FeaturesGenerator(features_generator_name=fc,
+                                                  radius=radius,
+                                                  num_bits=num_bits) for fc in fingerprints_class])
+        return results
+
+    @property
     def kernel_selector(self):
         return get_kernel(
             graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
@@ -444,6 +569,20 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             )
         else:
             return self.kernel_selector
+
+    @property
+    def kernel_extra_evaluators(self) -> List:
+        if not hasattr(self, '_kernel_extra_evaluators'):
+            self._kernel_extra_evaluators = [get_kernel(
+                graph_kernel_type=model_config.get('graph_kernel_type'),
+                mgk_files=model_config.get('mgk_files'),
+                features_kernel_type=model_config.get('features_kernel_type'),
+                rbf_length_scale=model_config.get('rbf_length_scale'),
+                features_hyperparameters_file=model_config.get('features_hyperparameters_file'),
+                dataset=self.data_full_extra_evaluators[i],
+                kernel_pkl_path='%s/kernel_extra_evaluator_%d.pkl' % (self.save_dir, i),
+            ) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
+        return self._kernel_extra_evaluators
 
     def process_args(self) -> None:
         super().process_args()

@@ -3,7 +3,7 @@
 import os
 
 CWD = os.path.dirname(os.path.abspath(__file__))
-from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple
+from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple, Callable
 from logging import Logger
 import pickle
 from sklearn.gaussian_process.kernels import RBF, DotProduct
@@ -27,7 +27,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
              mixture_columns: List[str] = None,
              target_columns: List[str] = None,
              feature_columns: List[str] = None,
-             features_generator: List[str] = None,
+             features_generator: List[Union[str, Callable]] = None,
              graph_kernel_type: Literal['graph', 'pre-computed'] = None,
              n_jobs: int = 8):
     if data_format == 'fingerprints':
@@ -111,6 +111,10 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
             else:
                 from alb.models.random_forest.RandomForestClassifier import RFClassifier
                 return RFClassifier()
+        elif model == 'logistic_regression':
+            assert dataset_type == 'classification'
+            from alb.models.logistic_regression.LogisticRegression import LogisticRegressor
+            return LogisticRegressor()
         elif model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None

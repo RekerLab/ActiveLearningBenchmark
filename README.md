@@ -17,6 +17,11 @@ python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy prec
 python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test
 ```
 
+### Logistic Regression on Morgan fingerprints
+```commandline
+python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/LogisticRegression_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test
+```
+
 ### Gaussian Process Regression on Morgan fingerprints
 ```commandline
 python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionValue_DotProductKerneL_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test
@@ -63,5 +68,5 @@ python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy prec
 
 ### Yoked Learning
 ```commandline
-python3 ActiveLearning.py --data_path alb/data/bace.csv --pure_columns mol --target_columns Class --dataset_type classification --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test --model_config_evaluator model_config/MLP_BinaryClassification_Morgan_Config
+python3 ActiveLearning.py --data_path alb/data/bace.csv --pure_columns mol --target_columns Class --dataset_type classification --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test --model_config_extra_evaluators model_config/MLP_BinaryClassification_Morgan_Config
 ```

@@ -70,31 +70,12 @@ class ActiveLearner:
                  model_evaluator=None,
                  dataset_train_evaluator=None,
                  dataset_pool_evaluator=None,
+                 model_extra_evaluators=None,
+                 dataset_train_extra_evaluators=None,
+                 dataset_pool_extra_evaluators=None,
+                 dataset_val_extra_evaluators=None,
                  evaluate_stride: int = None,
                  logger: Logger = None):
-        """
-
-        Parameters
-        ----------
-        save_dir
-        dataset_type
-        metrics
-        learning_type
-        model_selector
-        dataset_train_selector
-        dataset_pool_selector
-        dataset_val_evaluator
-        batch_size
-        batch_algorithm
-        kernel: callable kernel function for cluster batch active learning.
-        model_evaluator
-        dataset_train_evaluator
-        dataset_pool_evaluator
-        evaluate_stride
-        logger
-        """
-        # self.evaluator = Evaluator(model=model_evaluator)
-        # self.surrogate = Evaluator(model=model_selector)
         self.save_dir = save_dir
         self.dataset_type = dataset_type
         self.metrics = metrics
@@ -110,6 +91,10 @@ class ActiveLearner:
         self.dataset_train_evaluator_ = dataset_train_evaluator
         self.dataset_pool_evaluator_ = dataset_pool_evaluator
         self.dataset_val_evaluator = dataset_val_evaluator
+        self.model_extra_evaluators = model_extra_evaluators or []
+        self.dataset_train_extra_evaluators = dataset_train_extra_evaluators or []
+        self.dataset_pool_extra_evaluators = dataset_pool_extra_evaluators or []
+        self.dataset_val_extra_evaluators = dataset_val_extra_evaluators or []
 
         self.evaluate_stride = evaluate_stride
         if logger is not None:
@@ -118,8 +103,11 @@ class ActiveLearner:
             self.info = print
 
         self.active_learning_traj_dict = {'training_size': []}
+        self.active_learning_traj_extra_dict = [{'training_size': []} for i in range(len(self.model_extra_evaluators))]
         for metric in metrics:
             self.active_learning_traj_dict[metric] = []
+            for alt in self.active_learning_traj_extra_dict:
+                alt[metric] = []
 
     @property
     def model_evaluator(self):
@@ -166,7 +154,7 @@ class ActiveLearner:
 
     def run(self):
         n_iter = 0
-        while True:
+        while not self.termination():
             self.info('Start an new iteration of active learning: %d.' % n_iter)
             self.info('Training set size = %i' % self.train_size)
             self.info('Pool set size = %i' % len(self.dataset_pool_selector))
@@ -176,13 +164,11 @@ class ActiveLearner:
                     len(self.dataset_pool_selector) == 0:
                 self.evaluate()
             self.add_samples()
-            if self.termination():
-                break
             n_iter += 1
+        self.evaluate()
 
     def evaluate(self):
         self.info('evaluating model performance.')
-        print(self.yoked_learning)
         if self.yoked_learning:
             self.model_evaluator.fit(self.dataset_train_evaluator)
         y_pred = self.model_evaluator.predict_value(self.dataset_val_evaluator)
@@ -193,7 +179,19 @@ class ActiveLearner:
             self.info('Evaluation performance %s: %.5f' % (metric, metric_value))
             self.active_learning_traj_dict[metric].append(metric_value)
         pd.DataFrame(self.active_learning_traj_dict).to_csv('%s/active_learning.traj' % self.save_dir, index=False)
+        self.evaluate_extra()
         self.info('evaluating model performance finished.')
+
+    def evaluate_extra(self):
+        for i, model in enumerate(self.model_extra_evaluators):
+            model.fit(self.dataset_train_extra_evaluators[i])
+            y_pred = model.predict_value(self.dataset_val_extra_evaluators[i])
+            self.active_learning_traj_extra_dict[i]['training_size'].append(self.train_size)
+            for metric in self.metrics:
+                metric_value = eval_metric_func(self.dataset_val_extra_evaluators[i].y, y_pred, metric=metric)
+                self.active_learning_traj_extra_dict[i][metric].append(metric_value)
+            pd.DataFrame(self.active_learning_traj_extra_dict[i]).to_csv(
+                '%s/active_learning_extra_%d.traj' % (self.save_dir, i), index=False)
 
     def add_samples(self):
         pool_idx = list(range(self.pool_size))
@@ -218,6 +216,8 @@ class ActiveLearner:
             self.dataset_train_selector.data.append(self.dataset_pool_selector.data.pop(i))
             if self.yoked_learning:
                 self.dataset_train_evaluator.data.append(self.dataset_pool_evaluator.data.pop(i))
+            for j in range(len(self.model_extra_evaluators)):
+                self.dataset_train_extra_evaluators[j].data.append(self.dataset_pool_extra_evaluators[j].data.pop(i))
 
     def get_selected_idx(self,
                          acquisition_values: List[float],
