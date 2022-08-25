@@ -1,6 +1,6 @@
 {
     "data_format": "chemprop",
-    "loss_function": "mve",
+    "loss_function": "mse",
     "epochs": 100,
     "depth": 3,
     "hidden_size": 300,
@@ -8,9 +8,5 @@
     "ffn_hidden_size": 300,
     "dropout": 0.0,
     "batch_size": 50,
-    "ensemble_size": 1,
-    "fingerprints_class": [
-        "rdkit_2d_normalized"
-    ],
-	"no_features_scaling": true
+    "ensemble_size": 1
 }
