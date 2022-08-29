@@ -60,6 +60,7 @@ def split_data(smiles: List[str],
         warn = print
 
     random = Random(seed)
+    np.random.seed(seed)
     split_index = [[] for size in sizes]
     if split_type in ['scaffold_random', 'scaffold_order']:
         index_size = get_split_sizes(len(smiles), split_ratio=sizes)
