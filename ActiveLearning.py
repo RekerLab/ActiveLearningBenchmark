@@ -26,7 +26,8 @@ def main(args: ActiveLearningArgs) -> None:
                                        dataset_train_extra_evaluators=args.data_train_extra_evaluators,
                                        dataset_pool_extra_evaluators=args.data_pool_extra_evaluators,
                                        dataset_val_extra_evaluators=args.data_val_extra_evaluators,
-                                       evaluate_stride=args.evaluate_stride)
+                                       evaluate_stride=args.evaluate_stride,
+                                       seed=args.seed)
     else:
         active_learner = ActiveLearner(save_dir=args.save_dir,
                                        dataset_type=args.dataset_type,
@@ -43,7 +44,8 @@ def main(args: ActiveLearningArgs) -> None:
                                        dataset_train_extra_evaluators=args.data_train_extra_evaluators,
                                        dataset_pool_extra_evaluators=args.data_pool_extra_evaluators,
                                        dataset_val_extra_evaluators=args.data_val_extra_evaluators,
-                                       evaluate_stride=args.evaluate_stride)
+                                       evaluate_stride=args.evaluate_stride,
+                                       seed=args.seed)
     active_learner.run()
 
 

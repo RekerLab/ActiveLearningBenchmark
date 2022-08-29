@@ -107,14 +107,14 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
         if model == 'random_forest':
             if dataset_type == 'regression':
                 from alb.models.random_forest.RandomForestRegressor import RFRegressor
-                return RFRegressor()
+                return RFRegressor(random_state=seed)
             else:
                 from alb.models.random_forest.RandomForestClassifier import RFClassifier
-                return RFClassifier()
+                return RFClassifier(random_state=seed)
         elif model == 'logistic_regression':
             assert dataset_type == 'classification'
             from alb.models.logistic_regression.LogisticRegression import LogisticRegressor
-            return LogisticRegressor()
+            return LogisticRegressor(random_state=seed)
         elif model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None

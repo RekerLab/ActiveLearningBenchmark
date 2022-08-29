@@ -75,6 +75,7 @@ class ActiveLearner:
                  dataset_pool_extra_evaluators=None,
                  dataset_val_extra_evaluators=None,
                  evaluate_stride: int = None,
+                 seed: int = 0,
                  logger: Logger = None):
         self.save_dir = save_dir
         self.dataset_type = dataset_type
@@ -97,6 +98,7 @@ class ActiveLearner:
         self.dataset_val_extra_evaluators = dataset_val_extra_evaluators or []
 
         self.evaluate_stride = evaluate_stride
+        self.seed = seed
         if logger is not None:
             self.info = logger.info
         else:
@@ -208,6 +210,7 @@ class ActiveLearner:
             if self.pool_size <= self.batch_size:
                 selected_idx = pool_idx
             else:
+                np.random.seed(self.seed)
                 selected_idx = np.random.choice(pool_idx, self.batch_size, replace=False).tolist()
         else:
             raise ValueError(f'unknown learning type: {self.learning_type}')

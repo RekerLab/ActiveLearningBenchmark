@@ -143,12 +143,14 @@ class DatasetArgs(CommonArgs):
             if self.dataset_type == 'regression':
                 train_index, pool_index = split_data(smiles=df_al[self.pure_columns[0]],
                                                      split_type='random',
-                                                     sizes=[2 / len(df_al), 1 - 2 / len(df_al)])
+                                                     sizes=[2 / len(df_al), 1 - 2 / len(df_al)],
+                                                     seed=self.seed)
             else:
                 train_index, pool_index = split_data(smiles=df_al[self.pure_columns[0]],
                                                      targets=df_al[self.target_columns[0]],
                                                      split_type='class',
-                                                     n_samples_per_class=1)
+                                                     n_samples_per_class=1,
+                                                     seed=self.seed)
             df_al.iloc[train_index].to_csv('%s/train_init.csv' % self.save_dir, index=False)
             df_al.iloc[pool_index].to_csv('%s/pool_init.csv' % self.save_dir, index=False)
 
