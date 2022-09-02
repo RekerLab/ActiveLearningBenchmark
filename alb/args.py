@@ -202,6 +202,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """The metrics to evaluate model performance."""
     evaluate_stride: int = 100
     """Evaluate model performance on the validation set after no. steps of active learning."""
+    extra_evaluators_only: bool = False
+    """Output active learing trajectory of extra evaluators only."""
 
     @property
     def model_selector(self):

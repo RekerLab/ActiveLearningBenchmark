@@ -75,6 +75,7 @@ class ActiveLearner:
                  dataset_pool_extra_evaluators=None,
                  dataset_val_extra_evaluators=None,
                  evaluate_stride: int = None,
+                 extra_evaluators_only: bool = False,
                  seed: int = 0,
                  logger: Logger = None):
         self.save_dir = save_dir
@@ -98,18 +99,30 @@ class ActiveLearner:
         self.dataset_val_extra_evaluators = dataset_val_extra_evaluators or []
 
         self.evaluate_stride = evaluate_stride
+        self.extra_evaluators_only = extra_evaluators_only
         self.seed = seed
         if logger is not None:
             self.info = logger.info
         else:
             self.info = print
 
-        self.active_learning_traj_dict = {'training_size': []}
-        self.active_learning_traj_extra_dict = [{'training_size': []} for i in range(len(self.model_extra_evaluators))]
-        for metric in metrics:
-            self.active_learning_traj_dict[metric] = []
-            for alt in self.active_learning_traj_extra_dict:
-                alt[metric] = []
+    @property
+    def active_learning_traj_dict(self) -> Dict:
+        if not hasattr(self, '_active_learning_traj_dict'):
+            self._active_learning_traj_dict = {'training_size': []}
+            for metric in self.metrics:
+                self._active_learning_traj_dict[metric] = []
+        return self._active_learning_traj_dict
+
+    @property
+    def active_learning_traj_extra_dict(self) -> List[Dict]:
+        if not hasattr(self, '_active_learning_extra_traj_dict'):
+            self._active_learning_traj_extra_dict = \
+                [{'training_size': []} for i in range(len(self.model_extra_evaluators))]
+            for metric in self.metrics:
+                for alt in self._active_learning_traj_extra_dict:
+                    alt[metric] = []
+        return self._active_learning_traj_extra_dict
 
     @property
     def model_evaluator(self):
@@ -171,16 +184,17 @@ class ActiveLearner:
 
     def evaluate(self):
         self.info('evaluating model performance.')
-        if self.yoked_learning:
-            self.model_evaluator.fit(self.dataset_train_evaluator)
-        y_pred = self.model_evaluator.predict_value(self.dataset_val_evaluator)
+        if not self.extra_evaluators_only:
+            if self.yoked_learning:
+                self.model_evaluator.fit(self.dataset_train_evaluator)
+            y_pred = self.model_evaluator.predict_value(self.dataset_val_evaluator)
 
-        self.active_learning_traj_dict['training_size'].append(self.train_size)
-        for metric in self.metrics:
-            metric_value = eval_metric_func(self.dataset_val_evaluator.y, y_pred, metric=metric)
-            self.info('Evaluation performance %s: %.5f' % (metric, metric_value))
-            self.active_learning_traj_dict[metric].append(metric_value)
-        pd.DataFrame(self.active_learning_traj_dict).to_csv('%s/active_learning.traj' % self.save_dir, index=False)
+            self.active_learning_traj_dict['training_size'].append(self.train_size)
+            for metric in self.metrics:
+                metric_value = eval_metric_func(self.dataset_val_evaluator.y, y_pred, metric=metric)
+                self.info('Evaluation performance %s: %.5f' % (metric, metric_value))
+                self.active_learning_traj_dict[metric].append(metric_value)
+            pd.DataFrame(self.active_learning_traj_dict).to_csv('%s/active_learning.traj' % self.save_dir, index=False)
         self.evaluate_extra()
         self.info('evaluating model performance finished.')
 

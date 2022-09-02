@@ -27,6 +27,7 @@ def main(args: ActiveLearningArgs) -> None:
                                        dataset_pool_extra_evaluators=args.data_pool_extra_evaluators,
                                        dataset_val_extra_evaluators=args.data_val_extra_evaluators,
                                        evaluate_stride=args.evaluate_stride,
+                                       extra_evaluators_only=args.extra_evaluators_only,
                                        seed=args.seed)
     else:
         active_learner = ActiveLearner(save_dir=args.save_dir,
@@ -45,6 +46,7 @@ def main(args: ActiveLearningArgs) -> None:
                                        dataset_pool_extra_evaluators=args.data_pool_extra_evaluators,
                                        dataset_val_extra_evaluators=args.data_val_extra_evaluators,
                                        evaluate_stride=args.evaluate_stride,
+                                       extra_evaluators_only=args.extra_evaluators_only,
                                        seed=args.seed)
     active_learner.run()
 
