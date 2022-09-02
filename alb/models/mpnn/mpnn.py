@@ -237,7 +237,8 @@ class MPNN:
 
     def predict_uncertainty(self, pred_data):
         args = self.args
-        pred_data.normalize_features(self.features_scaler)
+        if args.features_scaling:
+            pred_data.normalize_features(self.features_scaler)
         pred_data_loader = MoleculeDataLoader(
             dataset=pred_data,
             batch_size=args.batch_size,
@@ -269,7 +270,8 @@ class MPNN:
 
     def predict_value(self, pred_data):
         args = self.args
-        pred_data.normalize_features(self.features_scaler)
+        if args.features_scaling:
+            pred_data.normalize_features(self.features_scaler)
         pred_data_loader = MoleculeDataLoader(
             dataset=pred_data,
             batch_size=args.batch_size,

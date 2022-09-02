@@ -116,7 +116,7 @@ class ActiveLearner:
 
     @property
     def active_learning_traj_extra_dict(self) -> List[Dict]:
-        if not hasattr(self, '_active_learning_extra_traj_dict'):
+        if not hasattr(self, '_active_learning_traj_extra_dict'):
             self._active_learning_traj_extra_dict = \
                 [{'training_size': []} for i in range(len(self.model_extra_evaluators))]
             for metric in self.metrics:
