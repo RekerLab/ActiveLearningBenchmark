@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
+import time
 from alb.args import ActiveLearningArgs
 from alb.al.learner import ActiveLearner
 
@@ -10,6 +10,7 @@ def main(args: ActiveLearningArgs) -> None:
     # args.save(os.path.join(args.save_dir, 'args.json'), skip_unpicklable=True)
     # args.save(os.path.join(args.save_dir, 'args_test.json'), with_reproducibility=False, skip_unpicklable=True)
     # active learning
+    start = time.time()
     if args.yoked_learning:
         active_learner = ActiveLearner(save_dir=args.save_dir,
                                        dataset_type=args.dataset_type,
@@ -53,6 +54,8 @@ def main(args: ActiveLearningArgs) -> None:
                                        extra_evaluators_only=args.extra_evaluators_only,
                                        seed=args.seed)
     active_learner.run()
+    end = time.time()
+    args.logger.info('total time: %d s' % (end - start))
 
 
 if __name__ == '__main__':

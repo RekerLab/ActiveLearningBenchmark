@@ -609,7 +609,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
         super().process_args()
         if self.stop_ratio is not None:
             if self.stop_size is None:
-                self.stop_size = int(self.stop_ratio * len(self.data_train_selector))
+                self.stop_size = int(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector)))
             else:
                 self.stop_size = min(self.stop_size, int(self.stop_ratio * len(self.data_train_selector)))
             assert self.stop_size >= 2

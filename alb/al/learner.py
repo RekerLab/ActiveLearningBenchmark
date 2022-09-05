@@ -166,6 +166,8 @@ class ActiveLearner:
     def termination(self) -> bool:
         if len(self.dataset_pool_selector) == 0:
             return True
+        elif self.stop_size is not None and len(self.dataset_train_selector) == self.stop_size:
+            return True
         else:
             return False
 
@@ -182,6 +184,9 @@ class ActiveLearner:
                 self.evaluate()
             self.add_samples()
             n_iter += 1
+        self.info('Start an new iteration of active learning: %d.' % n_iter)
+        self.info('Training set size = %i' % self.train_size)
+        self.info('Pool set size = %i' % len(self.dataset_pool_selector))
         self.evaluate()
 
     def evaluate(self):
