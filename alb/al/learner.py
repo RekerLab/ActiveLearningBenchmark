@@ -65,6 +65,7 @@ class ActiveLearner:
                  dataset_val_evaluator,
                  batch_size: int = 1,
                  batch_algorithm: Literal['nlargest', 'cluster'] = 'nlargest',
+                 stop_size=None,
                  kernel=None,
                  cluster_size=None,
                  model_evaluator=None,
@@ -84,6 +85,7 @@ class ActiveLearner:
         self.learning_type = learning_type
         self.batch_size = batch_size
         self.batch_algorithm = batch_algorithm
+        self.stop_size = stop_size
         self.kernel = kernel
         self.cluster_size = cluster_size
         self.model_selector = model_selector

@@ -79,12 +79,6 @@ class DatasetArgs(CommonArgs):
     """Method of splitting the data into active learning/validation."""
     split_sizes: List[float] = None
     """Split proportions for active learning/validation sets."""
-    init_size: int = 2
-    """number of samples as the initial."""
-    batch_size: int = 1
-    """number of samples added in each active learning iteration."""
-    batch_style: Literal['nlargest', 'clustering'] = 'nlargest'
-    """the method that add a batch of samples."""
 
     def process_args(self) -> None:
         super().process_args()
@@ -218,7 +212,16 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """Evaluate model performance on the validation set after no. steps of active learning."""
     extra_evaluators_only: bool = False
     """Output active learing trajectory of extra evaluators only."""
-
+    init_size: int = 2
+    """number of samples as the initial."""
+    batch_size: int = 1
+    """number of samples added in each active learning iteration."""
+    batch_style: Literal['nlargest', 'clustering'] = 'nlargest'
+    """the method that add a batch of samples."""
+    stop_ratio: float = None
+    """the ratio of molecules to stop the active learning."""
+    stop_size: int = None
+    """the number of molecules to stop the active learning."""
     @property
     def model_selector(self):
         if not hasattr(self, '_model_selector'):
@@ -604,3 +607,9 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
 
     def process_args(self) -> None:
         super().process_args()
+        if self.stop_ratio is not None:
+            if self.stop_size is None:
+                self.stop_size = int(self.stop_ratio * len(self.data_train_selector))
+            else:
+                self.stop_size = min(self.stop_size, int(self.stop_ratio * len(self.data_train_selector)))
+            assert self.stop_size >= 2
