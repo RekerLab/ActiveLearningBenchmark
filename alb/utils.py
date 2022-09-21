@@ -28,6 +28,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
              target_columns: List[str] = None,
              feature_columns: List[str] = None,
              features_generator: List[Union[str, Callable]] = None,
+             features_combination: Literal['concat', 'mean'] = None,
              graph_kernel_type: Literal['graph', 'pre-computed'] = None,
              n_jobs: int = 8):
     if data_format == 'fingerprints':
@@ -38,6 +39,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                         target_columns=target_columns,
                         feature_columns=feature_columns,
                         features_generator=features_generator,
+                        features_combination=features_combination,
                         n_jobs=n_jobs)
     elif data_format == 'chemprop':
         from chemprop.data.utils import get_data
@@ -56,7 +58,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
                         target_columns=target_columns,
                         feature_columns=feature_columns,
                         features_generator=features_generator,
-                        features_combination='concat',
+                        features_combination=features_combination,
                         mixture_type='single_graph',
                         graph_kernel_type=graph_kernel_type,
                         n_jobs=n_jobs)
@@ -184,7 +186,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
 def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                mgk_files: List[str] = None,
                features_kernel_type: Literal['linear', 'dot_product', 'rbf'] = None,
-               rbf_length_scale: Union[float, List[float]] = None,
+               features_hyperparameters: Union[float, List[float]] = None,
                features_hyperparameters_file: str = None,
                dataset: Dataset = None,
                kernel_pkl_path: str = None,
@@ -197,9 +199,9 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
         elif features_kernel_type == 'linear':
             return 'linear'
         elif features_kernel_type == 'dot_product':
-            return DotProduct()
+            return DotProduct(sigma_0=features_hyperparameters)
         elif features_kernel_type == 'rbf':
-            return RBF(length_scale=rbf_length_scale)
+            return RBF(length_scale=features_hyperparameters)
         else:
             raise ValueError
     else:
@@ -209,8 +211,8 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                 graph_kernel_type='graph',
                 mgk_hyperparameters_files=mgk_files,
                 features_kernel_type=features_kernel_type,
-                rbf_length_scale=rbf_length_scale,
-                rbf_length_scale_bounds="fixed",
+                features_hyperparameters=features_hyperparameters,
+                features_hyperparameters_bounds=None,
                 features_hyperparameters_file=features_hyperparameters_file
             ).kernel
         elif graph_kernel_type == 'pre-computed':
@@ -220,8 +222,8 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     dataset=dataset,
                     graph_kernel_type='pre-computed',
                     features_kernel_type=features_kernel_type,
-                    rbf_length_scale=rbf_length_scale,
-                    rbf_length_scale_bounds="fixed",
+                    features_hyperparameters=features_hyperparameters,
+                    features_hyperparameters_bounds=None,
                     features_hyperparameters_file=features_hyperparameters_file,
                     kernel_pkl=kernel_pkl_path
                 ).kernel
@@ -232,8 +234,8 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     graph_kernel_type='graph',
                     mgk_hyperparameters_files=mgk_files,
                     features_kernel_type=features_kernel_type,
-                    rbf_length_scale=rbf_length_scale,
-                    rbf_length_scale_bounds="fixed",
+                    features_hyperparameters=features_hyperparameters,
+                    features_hyperparameters_bounds=None,
                     features_hyperparameters_file=features_hyperparameters_file
                 )
                 kernel_dict = kernel_config.get_kernel_dict(dataset.X, dataset.X_repr.ravel())
@@ -243,8 +245,8 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     dataset=dataset,
                     graph_kernel_type='pre-computed',
                     features_kernel_type=features_kernel_type,
-                    rbf_length_scale=rbf_length_scale,
-                    rbf_length_scale_bounds="fixed",
+                    features_hyperparameters=features_hyperparameters,
+                    features_hyperparameters_bounds=None,
                     features_hyperparameters_file=features_hyperparameters_file,
                     kernel_dict=kernel_dict
                 ).kernel

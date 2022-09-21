@@ -201,7 +201,7 @@ class MPNN:
                 debug(f'Number of parameters = {param_count_all(model):,}')
 
             if args.cuda:
-                debug('Moving model to cuda')
+                print('Moving model to cuda')
             model = model.to(args.device)
 
             # Ensure that model is saved in correct location for evaluation if 0 epochs

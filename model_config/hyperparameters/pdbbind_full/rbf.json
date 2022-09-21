@@ -1,8 +1,8 @@
 {
- "rbf_length_scale": [
+ "features_hyperparameters": [
   18.05145604784157
  ],
- "rbf_length_scale_bounds": [
+ "features_hyperparameters_bounds": [
   [
    1.0,
    20.0

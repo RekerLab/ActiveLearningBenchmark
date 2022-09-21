@@ -20,13 +20,13 @@ Metric = Literal['roc-auc', 'accuracy', 'precision', 'recall', 'f1_score', 'mcc'
 
 class CommonArgs(Tap):
     save_dir: str
-    """The output directory."""
+    """the output directory."""
     n_jobs: int = 1
-    """The cpu numbers used for parallel computing."""
+    """the cpu numbers used for parallel computing."""
     quiet: bool = False
     """Whether the stream handler should be quiet (i.e., print only important info)."""
     logger_name: str = 'alb_output'
-    """The prefix of the output logger file: verbose.log and quite.log"""
+    """the prefix of the output logger file: verbose.log and quite.log"""
     seed: int = 0
     """random seed."""
 
@@ -39,13 +39,13 @@ class DatasetArgs(CommonArgs):
     data_public: Literal['freesolv', 'delaney', 'clintox', 'bace', 'bbbp'] = None
     """Use public data sets."""
     data_path: str = None
-    """The Path of input data CSV file."""
+    """the Path of input data CSV file."""
     data_path_training: str = None
-    """The Path of input data CSV file for training set."""
+    """the Path of input data CSV file for training set."""
     data_path_pool: str = None
-    """The Path of input data CSV file for pool set."""
+    """the Path of input data CSV file for pool set."""
     data_path_val: str = None
-    """The Path of input data CSV file for validation set."""
+    """the Path of input data CSV file for validation set."""
     pure_columns: List[str] = None
     """
     For pure compounds.
@@ -133,7 +133,8 @@ class DatasetArgs(CommonArgs):
         if self.data_path is not None:
             assert self.data_path_val is None and self.data_path_training is None and self.data_path_pool is None
             df = pd.read_csv(self.data_path)
-            al_index, val_index = split_data(smiles=df[self.pure_columns[0]],
+            al_index, val_index = split_data(n_samples=len(df),
+                                             smiles=df[self.pure_columns[0]] if self.pure_columns is not None else None,
                                              # targets=df[self.target_columns[0]],
                                              split_type=self.split_type,
                                              sizes=self.split_sizes,
@@ -142,16 +143,20 @@ class DatasetArgs(CommonArgs):
             df[df.index.isin(val_index)].to_csv('%s/val.csv' % self.save_dir, index=False)
             df_al = df[df.index.isin(al_index)]
             if self.dataset_type == 'regression':
-                train_index, pool_index = split_data(smiles=df_al[self.pure_columns[0]],
-                                                     split_type='random',
-                                                     sizes=[self.init_size / len(df_al), 1 - self.init_size / len(df_al)],
-                                                     seed=self.seed)
+                train_index, pool_index = split_data(
+                    n_samples=len(df_al),
+                    smiles=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                    split_type='random',
+                    sizes=[self.init_size / len(df_al), 1 - self.init_size / len(df_al)],
+                    seed=self.seed)
             else:
-                train_index, pool_index = split_data(smiles=df_al[self.pure_columns[0]],
-                                                     targets=df_al[self.target_columns[0]],
-                                                     split_type='class',
-                                                     n_samples_per_class=1,
-                                                     seed=self.seed)
+                train_index, pool_index = split_data(
+                    n_samples=len(df_al),
+                    smiles=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                    targets=df_al[self.target_columns[0]],
+                    split_type='class',
+                    n_samples_per_class=1,
+                    seed=self.seed)
                 if self.init_size > 2:
                     train_index.extend(np.random.choice(pool_index, self.init_size - 2, replace=False))
                     _ = []
@@ -199,17 +204,18 @@ class ModelArgs(Tap):
 
 class ActiveLearningArgs(DatasetArgs, ModelArgs):
     save_dir: str
-    """The output directory."""
+    """the output directory."""
     n_jobs: int = 1
-    """The cpu numbers used for parallel computing."""
+    """the cpu numbers used for parallel computing."""
     data_path: str = None
-    """The Path of input data CSV file."""
+    """the Path of input data CSV file."""
     learning_type: Literal['explorative', 'exploitive', 'EI', 'passive']
-    """The learning type to be performed."""
+    """the learning type to be performed."""
     metrics: List[Metric]
-    """The metrics to evaluate model performance."""
+    """the metrics to evaluate model performance."""
     evaluate_stride: int = 100
-    """Evaluate model performance on the validation set after no. steps of active learning."""
+    """evaluate model performance on the validation set when the size of the training set is an integer multiple of the 
+    evaluation stride."""
     extra_evaluators_only: bool = False
     """Output active learing trajectory of extra evaluators only."""
     init_size: int = 2
@@ -222,6 +228,11 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """the ratio of molecules to stop the active learning."""
     stop_size: int = None
     """the number of molecules to stop the active learning."""
+    save_cpt_stride: int = None
+    """save checkpoint file every no. steps of active learning iteration."""
+    load_checkpoint: bool = False
+    """load"""
+
     @property
     def model_selector(self):
         if not hasattr(self, '_model_selector'):
@@ -359,6 +370,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_selector,
+                features_combination=self.model_config_selector_dict.get('features_combination'),
                 graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
                 n_jobs=self.n_jobs)
         return self._data_train_selector
@@ -374,6 +386,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_selector,
+                features_combination=self.model_config_selector_dict.get('features_combination'),
                 graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
                 n_jobs=self.n_jobs)
         return self._data_pool_selector
@@ -390,6 +403,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     target_columns=self.target_columns,
                     feature_columns=self.feature_columns,
                     features_generator=self.features_generator_evaluator,
+                    features_combination=self.model_config_evaluator_dict.get('features_combination'),
                     graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
                     n_jobs=self.n_jobs)
             return self._data_train_evaluator
@@ -408,6 +422,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     target_columns=self.target_columns,
                     feature_columns=self.feature_columns,
                     features_generator=self.features_generator_evaluator,
+                    features_combination=self.model_config_evaluator_dict.get('features_combination'),
                     graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
                     n_jobs=self.n_jobs)
             return self._data_pool_evaluator
@@ -425,6 +440,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_evaluator,
+                features_combination=self.model_config_evaluator_dict.get('features_combination'),
                 graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
                 n_jobs=self.n_jobs)
         return self._data_val_evaluator
@@ -440,6 +456,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_extra_evaluators[i],
+                features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
         return self._data_train_extra_evaluators
@@ -455,6 +472,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_extra_evaluators[i],
+                features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
         return self._data_pool_extra_evaluators
@@ -470,6 +488,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_extra_evaluators[i],
+                features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
         return self._data_val_extra_evaluators
@@ -485,6 +504,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_selector,
+                features_combination=self.model_config_selector_dict.get('features_combination'),
                 graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
                 n_jobs=self.n_jobs)
         return self._data_full_selector
@@ -501,6 +521,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     target_columns=self.target_columns,
                     feature_columns=self.feature_columns,
                     features_generator=self.features_generator_evaluator,
+                    features_combination=self.model_config_evaluator_dict.get('features_combination'),
                     graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
                     n_jobs=self.n_jobs)
             return self._data_full_evaluator
@@ -518,6 +539,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 target_columns=self.target_columns,
                 feature_columns=self.feature_columns,
                 features_generator=self.features_generator_extra_evaluators[i],
+                features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_extra_evaluators_dict)]
         return self._data_full_extra_evaluators
@@ -570,7 +592,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             graph_kernel_type=self.model_config_selector_dict.get('graph_kernel_type'),
             mgk_files=self.model_config_selector_dict.get('mgk_files'),
             features_kernel_type=self.model_config_selector_dict.get('features_kernel_type'),
-            rbf_length_scale=self.model_config_selector_dict.get('rbf_length_scale'),
+            features_hyperparameters=self.model_config_selector_dict.get('features_hyperparameters'),
             features_hyperparameters_file=self.model_config_selector_dict.get('features_hyperparameters_file'),
             dataset=self.data_full_selector,
             kernel_pkl_path='%s/kernel_selector.pkl' % self.save_dir,
@@ -583,7 +605,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 graph_kernel_type=self.model_config_evaluator_dict.get('graph_kernel_type'),
                 mgk_files=self.model_config_evaluator_dict.get('mgk_files'),
                 features_kernel_type=self.model_config_evaluator_dict.get('features_kernel_type'),
-                rbf_length_scale=self.model_config_evaluator_dict.get('rbf_length_scale'),
+                features_hyperparameters=self.model_config_evaluator_dict.get('features_hyperparameters'),
                 features_hyperparameters_file=self.model_config_evaluator_dict.get('features_hyperparameters_file'),
                 dataset=self.data_full_evaluator,
                 kernel_pkl_path='%s/kernel_evaluator.pkl' % self.save_dir,
@@ -598,7 +620,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 mgk_files=model_config.get('mgk_files'),
                 features_kernel_type=model_config.get('features_kernel_type'),
-                rbf_length_scale=model_config.get('rbf_length_scale'),
+                features_hyperparameters=model_config.get('features_hyperparameters'),
                 features_hyperparameters_file=model_config.get('features_hyperparameters_file'),
                 dataset=self.data_full_extra_evaluators[i],
                 kernel_pkl_path='%s/kernel_extra_evaluator_%d.pkl' % (self.save_dir, i),
@@ -611,5 +633,14 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
             if self.stop_size is None:
                 self.stop_size = int(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector)))
             else:
-                self.stop_size = min(self.stop_size, int(self.stop_ratio * len(self.data_train_selector)))
+                self.stop_size = min(
+                    self.stop_size,
+                    int(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector))))
             assert self.stop_size >= 2
+
+
+class ActiveLearningContinueArgs(CommonArgs):
+    stop_ratio: float = None
+    """the ratio of molecules to stop the active learning."""
+    stop_size: int = None
+    """the number of molecules to stop the active learning."""

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple
+import os
+import json
+import pickle
 import pandas as pd
 import numpy as np
 from logging import Logger
@@ -19,6 +22,7 @@ from sklearn.metrics import (
     matthews_corrcoef
 )
 from ..args import Metric
+from tap import Tap
 
 
 def eval_metric_func(y, y_pred, metric: str) -> float:
@@ -77,6 +81,7 @@ class ActiveLearner:
                  dataset_val_extra_evaluators=None,
                  evaluate_stride: int = None,
                  extra_evaluators_only: bool = False,
+                 save_cpt_stride: int = None,
                  seed: int = 0,
                  logger: Logger = None):
         self.save_dir = save_dir
@@ -102,16 +107,19 @@ class ActiveLearner:
 
         self.evaluate_stride = evaluate_stride
         self.extra_evaluators_only = extra_evaluators_only
+        self.save_cpt_stride = save_cpt_stride
+
         self.seed = seed
         if logger is not None:
             self.info = logger.info
         else:
             self.info = print
+        self.n_iter = 0
 
     @property
     def active_learning_traj_dict(self) -> Dict:
         if not hasattr(self, '_active_learning_traj_dict'):
-            self._active_learning_traj_dict = {'training_size': []}
+            self._active_learning_traj_dict = {'training_size': [], 'acquisition': []}
             for metric in self.metrics:
                 self._active_learning_traj_dict[metric] = []
         return self._active_learning_traj_dict
@@ -164,30 +172,35 @@ class ActiveLearner:
         return len(self.dataset_pool_selector)
 
     def termination(self) -> bool:
-        if len(self.dataset_pool_selector) == 0:
+        if self.pool_size == 0:
             return True
-        elif self.stop_size is not None and len(self.dataset_train_selector) == self.stop_size:
+        elif self.stop_size is not None and self.train_size >= self.stop_size:
             return True
         else:
             return False
 
     def run(self):
-        n_iter = 0
-        while not self.termination():
+        self.info('start active learning with training set size = %d' % self.train_size)
+        self.info('pool set size = %d' % self.pool_size)
+        for n_iter in range(self.n_iter, self.n_iter + self.pool_size):
+            if self.termination():
+                break
             self.info('Start an new iteration of active learning: %d.' % n_iter)
-            self.info('Training set size = %i' % self.train_size)
-            self.info('Pool set size = %i' % len(self.dataset_pool_selector))
             # training
             self.model_selector.fit(self.dataset_train_selector)
-            if (self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0) or \
-                    len(self.dataset_pool_selector) == 0:
-                self.evaluate()
+            # add sample
             self.add_samples()
-            n_iter += 1
-        self.info('Start an new iteration of active learning: %d.' % n_iter)
-        self.info('Training set size = %i' % self.train_size)
-        self.info('Pool set size = %i' % len(self.dataset_pool_selector))
-        self.evaluate()
+            # evaluate
+            if self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
+                self.evaluate()
+            if self.save_cpt_stride is not None and n_iter % self.save_cpt_stride == 0:
+                self.n_iter = n_iter + 1
+                self.save(path=self.save_dir, overwrite=True)
+                self.info('save checkpoint file %s/al.pkl' % self.save_dir)
+            self.info('Training set size = %i' % self.train_size)
+            self.info('Pool set size = %i' % self.pool_size)
+        if self.active_learning_traj_dict['training_size'][-1] != self.train_size:
+            self.evaluate()
 
     def evaluate(self):
         self.info('evaluating model performance.')
@@ -197,6 +210,10 @@ class ActiveLearner:
             y_pred = self.model_evaluator.predict_value(self.dataset_val_evaluator)
 
             self.active_learning_traj_dict['training_size'].append(self.train_size)
+            if hasattr(self, 'acquisition'):
+                self.active_learning_traj_dict['acquisition'].append(json.dumps(self.acquisition))
+            else:
+                self.active_learning_traj_dict['acquisition'].append('none')
             for metric in self.metrics:
                 metric_value = eval_metric_func(self.dataset_val_evaluator.y, y_pred, metric=metric)
                 self.info('Evaluation performance %s: %.5f' % (metric, metric_value))
@@ -220,9 +237,13 @@ class ActiveLearner:
         pool_idx = list(range(self.pool_size))
         if self.learning_type == 'explorative':
             y_std = self.model_selector.predict_uncertainty(self.dataset_pool_selector)
+            self.acquisition = y_std[np.argsort(y_std)[-self.batch_size:]].tolist()
+            self.info('add a sample with acquisition: %s' % json.dumps(self.acquisition))
             selected_idx = self.get_selected_idx(y_std, pool_idx)
         elif self.learning_type == 'exploitive':
             y_pred = self.model_selector.predict_value(self.dataset_pool_selector)
+            self.acquisition = y_pred[np.argsort(y_pred)[-self.batch_size:]].tolist()
+            self.info('add a sample with acquisition: %s' % json.dumps(self.acquisition))
             selected_idx = self.get_selected_idx(y_pred, pool_idx)
         elif self.learning_type == 'EI':
             # TODO
@@ -302,3 +323,25 @@ class ActiveLearner:
                    range(
                        self.batch_size)]  # find min-in-cluster-distance associated idx
         return add_idx
+
+    def save(self, path, filename='al.pkl', overwrite=False):
+        f_al = os.path.join(path, filename)
+        if os.path.isfile(f_al) and not overwrite:
+            raise RuntimeError(
+                f'Path {f_al} already exists. To overwrite, set '
+                '`overwrite=True`.'
+            )
+        store = self.__dict__.copy()
+        pickle.dump(store, open(f_al, 'wb'), protocol=4)
+
+    @classmethod
+    def load(cls, path, filename='al.pkl'):
+        f_al = os.path.join(path, filename)
+        store = pickle.load(open(f_al, 'rb'))
+        input = {}
+        for key in ['save_dir', 'dataset_type', 'metrics', 'learning_type', 'model_selector', 'dataset_train_selector',
+                    'dataset_pool_selector', 'dataset_val_evaluator']:
+            input[key] = store[key]
+        dataset = cls(**input)
+        dataset.__dict__.update(**store)
+        return dataset
