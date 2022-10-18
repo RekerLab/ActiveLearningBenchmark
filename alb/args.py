@@ -10,8 +10,8 @@ import json
 import pandas as pd
 import numpy as np
 from mgktools.features_mol import FeaturesGenerator
+from mgktools.data.split import data_split_index
 from alb.logging import create_logger
-from alb.data.utils import split_data
 from alb.utils import get_data, get_model, get_kernel
 
 Metric = Literal['roc-auc', 'accuracy', 'precision', 'recall', 'f1_score', 'mcc',
@@ -79,6 +79,8 @@ class DatasetArgs(CommonArgs):
     """Method of splitting the data into active learning/validation."""
     split_sizes: List[float] = None
     """Split proportions for active learning/validation sets."""
+    full_val: bool = False
+    """validate the performance of active learning on the full dataset."""
 
     def process_args(self) -> None:
         super().process_args()
@@ -148,37 +150,64 @@ class DatasetArgs(CommonArgs):
         if self.data_path is not None:
             assert self.data_path_val is None and self.data_path_training is None and self.data_path_pool is None
             df = pd.read_csv(self.data_path)
-            al_index, val_index = split_data(n_samples=len(df),
-                                             smiles=df[self.pure_columns[0]] if self.pure_columns is not None else None,
-                                             # targets=df[self.target_columns[0]],
-                                             split_type=self.split_type,
-                                             sizes=self.split_sizes,
-                                             seed=self.seed,
-                                             logger=self.logger)
-            df[df.index.isin(val_index)].to_csv('%s/val.csv' % self.save_dir, index=False)
-            df_al = df[df.index.isin(al_index)]
-            if self.dataset_type == 'regression':
-                train_index, pool_index = split_data(
-                    n_samples=len(df_al),
-                    smiles=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
-                    split_type='random',
-                    sizes=[self.init_size / len(df_al), 1 - self.init_size / len(df_al)],
-                    seed=self.seed)
+            if self.full_val:
+                df.to_csv('%s/val.csv' % self.save_dir, index=False)
+                df_al = df
+                if self.dataset_type == 'regression':
+                    train_index, pool_index = data_split_index(
+                        n_samples=len(df_al),
+                        mols=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                        split_type='random',
+                        sizes=[self.init_size / len(df_al), 1 - self.init_size / len(df_al)],
+                        seed=self.seed)
+                else:
+                    train_index, pool_index = data_split_index(
+                        n_samples=len(df_al),
+                        mols=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                        targets=df_al[self.target_columns[0]],
+                        split_type='init_al',
+                        n_samples_per_class=1,
+                        seed=self.seed)
+                    if self.init_size > 2:
+                        train_index.extend(np.random.choice(pool_index, self.init_size - 2, replace=False))
+                        _ = []
+                        for i in pool_index:
+                            if i not in train_index:
+                                _.append(i)
+                        pool_index = _
             else:
-                train_index, pool_index = split_data(
-                    n_samples=len(df_al),
-                    smiles=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
-                    targets=df_al[self.target_columns[0]],
-                    split_type='class',
-                    n_samples_per_class=1,
-                    seed=self.seed)
-                if self.init_size > 2:
-                    train_index.extend(np.random.choice(pool_index, self.init_size - 2, replace=False))
-                    _ = []
-                    for i in pool_index:
-                        if i not in train_index:
-                            _.append(i)
-                    pool_index = _
+                al_index, val_index = data_split_index(
+                    n_samples=len(df),
+                    mols=df[self.pure_columns[0]] if self.pure_columns is not None else None,
+                    # targets=df[self.target_columns[0]],
+                    split_type=self.split_type,
+                    sizes=self.split_sizes,
+                    seed=self.seed,
+                    logger=self.logger)
+                df[df.index.isin(val_index)].to_csv('%s/val.csv' % self.save_dir, index=False)
+                df_al = df[df.index.isin(al_index)]
+                if self.dataset_type == 'regression':
+                    train_index, pool_index = data_split_index(
+                        n_samples=len(df_al),
+                        mols=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                        split_type='random',
+                        sizes=[self.init_size / len(df_al), 1 - self.init_size / len(df_al)],
+                        seed=self.seed)
+                else:
+                    train_index, pool_index = data_split_index(
+                        n_samples=len(df_al),
+                        mols=df_al[self.pure_columns[0]] if self.pure_columns is not None else None,
+                        targets=df_al[self.target_columns[0]],
+                        split_type='init_al',
+                        n_samples_per_class=1,
+                        seed=self.seed)
+                    if self.init_size > 2:
+                        train_index.extend(np.random.choice(pool_index, self.init_size - 2, replace=False))
+                        _ = []
+                        for i in pool_index:
+                            if i not in train_index:
+                                _.append(i)
+                        pool_index = _
             df_al.iloc[train_index].to_csv('%s/train_init.csv' % self.save_dir, index=False)
             df_al.iloc[pool_index].to_csv('%s/pool_init.csv' % self.save_dir, index=False)
 
