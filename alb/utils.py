@@ -199,7 +199,12 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
         elif features_kernel_type == 'linear':
             return 'linear'
         elif features_kernel_type == 'dot_product':
-            return DotProduct(sigma_0=features_hyperparameters)
+            if features_hyperparameters.__class__ == list:
+                assert len(features_hyperparameters) == 1
+                sigma_0 = features_hyperparameters[0]
+            else:
+                sigma_0 = features_hyperparameters
+            return DotProduct(sigma_0=sigma_0)
         elif features_kernel_type == 'rbf':
             return RBF(length_scale=features_hyperparameters)
         else:
