@@ -107,11 +107,12 @@ class DatasetArgs(CommonArgs):
             self.pure_columns = ['smiles']
             self.target_columns = ['-logKd/Ki']
             self.dataset_type = 'regression'
-        elif self.data_public == 'clintox':
+        elif self.data_public in ['ld50_zhu', 'caco2_wang', 'solubility_aqsoldb', 'ppbr_az', 'vdss_lombardo',
+                                  'Half_Life_Obach', 'Clearance_Hepatocyte_AZ']:
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
-            self.pure_columns = ['smiles']
-            self.target_columns = ['FDA_APPROVED', 'CT_TOX']
-            self.dataset_type = 'classification'
+            self.pure_columns = ['Drug']
+            self.target_columns = ['Y']
+            self.dataset_type = 'regression'
         elif self.data_public == 'bbbp':
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
             self.pure_columns = ['smiles']
@@ -121,6 +122,20 @@ class DatasetArgs(CommonArgs):
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
             self.pure_columns = ['mol']
             self.target_columns = ['Class']
+            self.dataset_type = 'classification'
+        elif self.data_public == 'hiv':
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['smiles']
+            self.target_columns = ['HIV_active']
+            self.dataset_type = 'classification'
+        elif self.data_public in ['ames', 'carcinogens_lagunin', 'dili', 'herg', 'skin', 'hia_hou', 'pgp_broccatelli',
+                                  'bioavailability_ma', 'clintox', 'bbb_martins', 'CYP1A2_Veith.csv',
+                                  'CYP2C9_Substrate_CarbonMangels.csv', 'CYP2C9_Veith.csv', 'CYP2C19_Veith.csv',
+                                  'CYP2D6_Substrate_CarbonMangels.csv', 'CYP2D6_Veith.csv', 'CYP3A4_Veith.csv',
+                                  'CYP3A4_Substrate_CarbonMangels.csv']:
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['Drug']
+            self.target_columns = ['Y']
             self.dataset_type = 'classification'
 
         if self.split_type == 'scaffold':
