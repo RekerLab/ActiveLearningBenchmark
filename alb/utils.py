@@ -212,7 +212,7 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                 mgk_hyperparameters_files=mgk_files,
                 features_kernel_type=features_kernel_type,
                 features_hyperparameters=features_hyperparameters,
-                features_hyperparameters_bounds=None,
+                features_hyperparameters_bounds="fixed",
                 features_hyperparameters_file=features_hyperparameters_file
             ).kernel
         elif graph_kernel_type == 'pre-computed':
@@ -223,7 +223,7 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     graph_kernel_type='pre-computed',
                     features_kernel_type=features_kernel_type,
                     features_hyperparameters=features_hyperparameters,
-                    features_hyperparameters_bounds=None,
+                    features_hyperparameters_bounds="fixed",
                     features_hyperparameters_file=features_hyperparameters_file,
                     kernel_pkl=kernel_pkl_path
                 ).kernel
@@ -235,7 +235,7 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     mgk_hyperparameters_files=mgk_files,
                     features_kernel_type=features_kernel_type,
                     features_hyperparameters=features_hyperparameters,
-                    features_hyperparameters_bounds=None,
+                    features_hyperparameters_bounds="fixed",
                     features_hyperparameters_file=features_hyperparameters_file
                 )
                 kernel_dict = kernel_config.get_kernel_dict(dataset.X, dataset.X_repr.ravel())
@@ -246,7 +246,7 @@ def get_kernel(graph_kernel_type: Literal['graph', 'pre-computed'] = None,
                     graph_kernel_type='pre-computed',
                     features_kernel_type=features_kernel_type,
                     features_hyperparameters=features_hyperparameters,
-                    features_hyperparameters_bounds=None,
+                    features_hyperparameters_bounds="fixed",
                     features_hyperparameters_file=features_hyperparameters_file,
                     kernel_dict=kernel_dict
                 ).kernel
