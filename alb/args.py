@@ -36,7 +36,7 @@ class CommonArgs(Tap):
 
 
 class DatasetArgs(CommonArgs):
-    data_public: Literal['freesolv', 'delaney', 'clintox', 'bace', 'bbbp'] = None
+    data_public = None
     """Use public data sets."""
     data_path: str = None
     """the Path of input data CSV file."""
