@@ -131,10 +131,10 @@ class DatasetArgs(CommonArgs):
             self.target_columns = ['HIV_active']
             self.dataset_type = 'classification'
         elif self.data_public in ['ames', 'carcinogens_lagunin', 'dili', 'herg', 'skin', 'hia_hou', 'pgp_broccatelli',
-                                  'bioavailability_ma', 'clintox', 'bbb_martins', 'CYP1A2_Veith.csv',
-                                  'CYP2C9_Substrate_CarbonMangels.csv', 'CYP2C9_Veith.csv', 'CYP2C19_Veith.csv',
-                                  'CYP2D6_Substrate_CarbonMangels.csv', 'CYP2D6_Veith.csv', 'CYP3A4_Veith.csv',
-                                  'CYP3A4_Substrate_CarbonMangels.csv']:
+                                  'bioavailability_ma', 'clintox', 'bbb_martins', 'CYP1A2_Veith',
+                                  'CYP2C9_Substrate_CarbonMangels', 'CYP2C9_Veith', 'CYP2C19_Veith',
+                                  'CYP2D6_Substrate_CarbonMangels', 'CYP2D6_Veith', 'CYP3A4_Veith',
+                                  'CYP3A4_Substrate_CarbonMangels']:
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
             self.pure_columns = ['Drug']
             self.target_columns = ['Y']
