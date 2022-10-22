@@ -12,5 +12,6 @@
     "fingerprints_class": [
         "morgan"
     ],
-	"no_features_scaling": true
+    "radius": 2,
+    "num_bits": 1024,
 }
