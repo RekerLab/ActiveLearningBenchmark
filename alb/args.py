@@ -186,6 +186,8 @@ class DatasetArgs(CommonArgs):
                     logger=self.logger)
                 df[df.index.isin(val_index)].to_csv('%s/val.csv' % self.save_dir, index=False)
                 df_al = df[df.index.isin(al_index)]
+                if self.init_size > len(df_al):
+                    self.init_size = len(df_al)
                 if self.dataset_type == 'regression':
                     train_index, pool_index = data_split_index(
                         n_samples=len(df_al),

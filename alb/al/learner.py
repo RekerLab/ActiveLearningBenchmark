@@ -189,11 +189,11 @@ class ActiveLearner:
             self.info('Start an new iteration of active learning: %d.' % n_iter)
             # training
             self.model_selector.fit(self.dataset_train_selector)
-            # add sample
-            self.add_samples()
             # evaluate
             if self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
                 self.evaluate()
+            # add sample
+            self.add_samples()
             if self.save_cpt_stride is not None and n_iter % self.save_cpt_stride == 0:
                 self.n_iter = n_iter + 1
                 self.save(path=self.save_dir, filename='al_temp.pkl', overwrite=True)
@@ -201,7 +201,9 @@ class ActiveLearner:
                 self.info('save checkpoint file %s/al.pkl' % self.save_dir)
             self.info('Training set size = %i' % self.train_size)
             self.info('Pool set size = %i' % self.pool_size)
-        if self.active_learning_traj_dict['training_size'][-1] != self.train_size:
+        if len(self.active_learning_traj_dict['training_size']) == 0 or \
+                self.active_learning_traj_dict['training_size'][-1] != self.train_size:
+            self.model_selector.fit(self.dataset_train_selector)
             self.evaluate()
         if self.save_cpt_stride:
             self.save(path=self.save_dir, overwrite=True)
