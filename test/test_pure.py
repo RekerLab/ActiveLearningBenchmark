@@ -22,8 +22,8 @@ from ActiveLearning import main
     ('gpr-mgk-rdkit', 'GaussianProcessRegressionUncertainty_MarginalizedGraphKernel_RBFKernel_RdkitNorm_Config'),
     ('mlp-mve-morgan', 'MLP_Regression_MVE_Morgan_Config'),
     ('mlp-evi-morgan', 'MLP_Regression_Evidential_Morgan_Config'),
-    ('dmpnn-rdkit-mve', 'DMPNN_RDKIT_Regression_MVE_Config'),
-    ('dmpnn-rdkit-evi', 'DMPNN_RDKIT_Regression_Evidential_Config'),
+    ('dmpnn-rdkit-mve', 'DMPNN_RdkitNorm_Regression_MVE_Config'),
+    ('dmpnn-rdkit-evi', 'DMPNN_RdkitNorm_Regression_Evidential_Config'),
 ])
 @pytest.mark.parametrize('learning_type', ['explorative'])
 @pytest.mark.parametrize('split_type', ['random'])
@@ -105,9 +105,10 @@ def test_ActiveLearning_PureCompound_Regression_1(dataset, modelset, learning_ty
     ('svc-mgk', 'SupportVectorMachine_MarginalizedGraphKernel_Config'),
     ('svc-mgk-dpk', 'SupportVectorMachine_MarginalizedGraphKernel_DotProductKernel_Morgan_Config'),
     ('svc-mgk-rbf', 'SupportVectorMachine_MarginalizedGraphKernel_RBFKernel_RdkitNorm_Config'),
-    ('mlp-morgan', 'MLP_BinaryClassification_Morgan_Config'),
+    ('mlp-morgan', 'MLP_Morgan_BinaryClassification_Config'),
+    ('mlp-rdkit', 'MLP_RdkitNorm_BinaryClassification_Config'),
     ('dmpnn', 'DMPNN_BinaryClassification_Config'),
-    ('dmpnn-rdkit', 'DMPNN_RDKIT_BinaryClassification_Config'),
+    ('dmpnn-rdkit', 'DMPNN_RdkitNorm_BinaryClassification_Config'),
 ])
 @pytest.mark.parametrize('learning_type', ['explorative'])
 @pytest.mark.parametrize('split_type', ['random'])
