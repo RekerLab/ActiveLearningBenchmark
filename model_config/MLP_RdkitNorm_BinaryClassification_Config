@@ -10,5 +10,6 @@
     "ensemble_size": 1,
     "fingerprints_class": [
         "rdkit_2d_normalized"
-    ]
+    ],
+    "no_features_scaling": true
 }
