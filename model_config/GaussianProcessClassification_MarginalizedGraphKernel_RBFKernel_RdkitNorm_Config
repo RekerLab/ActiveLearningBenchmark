@@ -10,6 +10,6 @@
     ],
     "features_kernel_type": "rbf",
     "features_hyperparameters": [
-        1.0
+        10.0
     ]
 }

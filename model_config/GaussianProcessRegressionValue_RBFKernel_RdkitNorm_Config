@@ -6,6 +6,6 @@
         "rdkit_2d_normalized"
     ],
     "features_kernel_type": "rbf",
-    "features_hyperparameters": 1.0,
+    "features_hyperparameters": 10.0,
     "uncertainty_type": "value"
 }
