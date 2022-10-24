@@ -68,6 +68,8 @@ class ActiveLearner:
                  dataset_train_selector,
                  dataset_pool_selector,
                  dataset_val_evaluator,
+                 df_train,
+                 df_pool,
                  batch_size: int = 1,
                  batch_algorithm: Literal['nlargest', 'cluster'] = 'nlargest',
                  stop_size=None,
@@ -105,6 +107,10 @@ class ActiveLearner:
         self.dataset_train_extra_evaluators = dataset_train_extra_evaluators or []
         self.dataset_pool_extra_evaluators = dataset_pool_extra_evaluators or []
         self.dataset_val_extra_evaluators = dataset_val_extra_evaluators or []
+
+        self.df_train = df_train
+        self.df_train['acquisition'] = 'none'
+        self.df_pool = df_pool
 
         self.evaluate_stride = evaluate_stride
         self.extra_evaluators_only = extra_evaluators_only
@@ -262,6 +268,16 @@ class ActiveLearner:
                 selected_idx = np.random.choice(pool_idx, self.batch_size, replace=False).tolist()
         else:
             raise ValueError(f'unknown learning type: {self.learning_type}')
+
+        df_add = self.df_pool[self.df_pool.index.isin(selected_idx)].reset_index().drop(columns=['index'])
+        if hasattr(self, 'acquisition'):
+            df_add['acquisition'] = self.acquisition
+        else:
+            df_add['acquisition'] = 'none'
+        self.df_train = pd.concat([self.df_train, df_add]).reset_index().drop(columns=['index'])
+        self.df_pool = self.df_pool[~self.df_pool.index.isin(selected_idx)].reset_index().drop(columns=['index'])
+        self.df_train.to_csv('%s/train_al.csv' % self.save_dir, index=False)
+        self.df_pool.to_csv('%s/pool_al.csv' % self.save_dir, index=False)
 
         for i in sorted(selected_idx, reverse=True):
             self.dataset_train_selector.data.append(self.dataset_pool_selector.data.pop(i))
