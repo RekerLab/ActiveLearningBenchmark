@@ -7,12 +7,14 @@ from tap import Tap
 from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple
 from logging import Logger
 import json
+import math
 import pandas as pd
 import numpy as np
 from mgktools.features_mol import FeaturesGenerator
 from mgktools.data.split import data_split_index
 from alb.logging import create_logger
 from alb.utils import get_data, get_model, get_kernel
+
 
 Metric = Literal['roc-auc', 'accuracy', 'precision', 'recall', 'f1_score', 'mcc',
                  'rmse', 'mae', 'mse', 'r2', 'max']
@@ -75,7 +77,7 @@ class DatasetArgs(CommonArgs):
     """Nomralize the molecular features_mol."""
     normalize_features_add: bool = False
     """Nomralize the additonal features_mol."""
-    split_type: Literal['random', 'scaffold_random', 'scaffold_order'] = 'random'
+    split_type: Literal['random', 'scaffold_random', 'scaffold_order'] = None
     """Method of splitting the data into active learning/validation."""
     split_sizes: List[float] = None
     """Split proportions for active learning/validation sets."""
@@ -151,6 +153,8 @@ class DatasetArgs(CommonArgs):
             assert self.data_path_val is None and self.data_path_training is None and self.data_path_pool is None
             df = pd.read_csv(self.data_path)
             if self.full_val:
+                assert self.split_type == None
+                assert self.split_sizes == None
                 df.to_csv('%s/val.csv' % self.save_dir, index=False)
                 df_al = df
                 if self.dataset_type == 'regression':
@@ -677,11 +681,11 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
         super().process_args()
         if self.stop_ratio is not None:
             if self.stop_size is None:
-                self.stop_size = int(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector)))
+                self.stop_size = math.ceil(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector)))
             else:
                 self.stop_size = min(
                     self.stop_size,
-                    int(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector))))
+                    math.ceil(self.stop_ratio * (len(self.data_train_selector) + len(self.data_pool_selector))))
             assert self.stop_size >= 2
 
 
