@@ -20,8 +20,8 @@ from ActiveLearning import main
     ('gpr-mgk', 'GaussianProcessRegressionUncertainty_MarginalizedGraphKernel_Config'),
     ('gpr-mgk-morgan', 'GaussianProcessRegressionUncertainty_MarginalizedGraphKernel_DotProductKernel_Morgan_Config'),
     ('gpr-mgk-rdkit', 'GaussianProcessRegressionUncertainty_MarginalizedGraphKernel_RBFKernel_RdkitNorm_Config'),
-    ('mlp-mve-morgan', 'MLP_Regression_MVE_Morgan_Config'),
-    ('mlp-evi-morgan', 'MLP_Regression_Evidential_Morgan_Config'),
+    ('mlp-mve-morgan', 'MLP_Morgan_Regression_MVE_Config'),
+    ('mlp-evi-morgan', 'MLP_Morgan_Regression_Evidential_Config'),
     ('dmpnn-rdkit-mve', 'DMPNN_RdkitNorm_Regression_MVE_Config'),
     ('dmpnn-rdkit-evi', 'DMPNN_RdkitNorm_Regression_Evidential_Config'),
 ])

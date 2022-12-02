@@ -15,8 +15,8 @@ from alb.args import ActiveLearningArgs, ActiveLearningContinueArgs
     ('rf-morgan', 'RandomForest_Morgan_Config'),
     ('gpr-dpk-morgan', 'GaussianProcessRegressionUncertainty_DotProductKernel_Morgan_Config'),
     ('gpr-mgk', 'GaussianProcessRegressionUncertainty_MarginalizedGraphKernel_Config'),
-    ('mlp-mve-morgan', 'MLP_Regression_MVE_Morgan_Config'),
-    ('mlp-evi-morgan', 'MLP_Regression_Evidential_Morgan_Config'),
+    ('mlp-mve-morgan', 'MLP_Morgan_Regression_MVE_Config'),
+    ('mlp-evi-morgan', 'MLP_Morgan_Regression_Evidential_Config'),
     ('dmpnn-rdkit-mve', 'DMPNN_RdkitNorm_Regression_MVE_Config'),
     ('dmpnn-rdkit-evi', 'DMPNN_RdkitNorm_Regression_Evidential_Config'),
 ])
