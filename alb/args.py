@@ -220,6 +220,10 @@ class DatasetArgs(CommonArgs):
             shutil.copyfile(self.data_path_training, '%s/train_init.csv' % self.save_dir)
             shutil.copyfile(self.data_path_pool, '%s/pool_init.csv' % self.save_dir)
             shutil.copyfile(self.data_path_val, '%s/val.csv' % self.save_dir)
+            pd.concat([pd.read_csv(f) for f in [self.data_path_training,
+                                                self.data_path_pool,
+                                                self.data_path_val]]).to_csv('%s/full.csv' % self.save_dir)
+            self.data_path = '%s/full.csv' % self.save_dir
 
 
 class ModelArgs(Tap):
