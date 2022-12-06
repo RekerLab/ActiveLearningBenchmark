@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import shutil
 
 CWD = os.path.dirname(os.path.abspath(__file__))
 from tap import Tap
@@ -212,6 +213,13 @@ class DatasetArgs(CommonArgs):
                         pool_index = _
             df_al.iloc[train_index].to_csv('%s/train_init.csv' % self.save_dir, index=False)
             df_al.iloc[pool_index].to_csv('%s/pool_init.csv' % self.save_dir, index=False)
+        else:
+            assert self.data_path_training is not None, 'please provide input data'
+            assert self.data_path_pool is not None, 'please provide input data'
+            assert self.data_path_val is not None, 'please provide input data'
+            shutil.copyfile(self.data_path_training, '%s/train_init.csv' % self.save_dir)
+            shutil.copyfile(self.data_path_pool, '%s/pool_init.csv' % self.save_dir)
+            shutil.copyfile(self.data_path_val, '%s/val.csv' % self.save_dir)
 
 
 class ModelArgs(Tap):
