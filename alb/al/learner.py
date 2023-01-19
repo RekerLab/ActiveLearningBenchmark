@@ -86,6 +86,7 @@ class ActiveLearner:
                  evaluate_stride: int = None,
                  extra_evaluators_only: bool = False,
                  save_cpt_stride: int = None,
+                 save_preds: bool = False,
                  seed: int = 0,
                  logger: Logger = None):
         self.save_dir = save_dir
@@ -117,6 +118,7 @@ class ActiveLearner:
         self.evaluate_stride = evaluate_stride
         self.extra_evaluators_only = extra_evaluators_only
         self.save_cpt_stride = save_cpt_stride
+        self.save_preds = save_preds
 
         self.seed = seed
         if logger is not None:
@@ -239,6 +241,10 @@ class ActiveLearner:
             if self.yoked_learning:
                 self.model_evaluator.fit(self.dataset_train_evaluator)
             y_pred = self.model_evaluator.predict_value(self.dataset_val_evaluator)
+
+            if self.save_preds:
+                pd.DataFrame({'truth': self.dataset_val_evaluator.y,
+                              'prediction': y_pred}).to_csv('%s/test_%d.csv' % (self.save_dir, self.n_iter))
 
             self.active_learning_traj_dict['iteration'].append(self.n_iter)
             self.active_learning_traj_dict['selected_data'].append(len(self.selected_data))
