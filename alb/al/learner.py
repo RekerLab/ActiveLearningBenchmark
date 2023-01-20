@@ -244,7 +244,8 @@ class ActiveLearner:
 
             if self.save_preds:
                 pd.DataFrame({'truth': self.dataset_val_evaluator.y,
-                              'prediction': y_pred}).to_csv('%s/test_%d.csv' % (self.save_dir, self.n_iter))
+                              'prediction': y_pred}).to_csv('%s/test_%d.csv' % (self.save_dir, self.n_iter),
+                                                            index=False)
 
             self.active_learning_traj_dict['iteration'].append(self.n_iter)
             self.active_learning_traj_dict['selected_data'].append(len(self.selected_data))
