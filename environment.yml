@@ -1,4 +1,4 @@
-name: alb
+name: alb_003
 
 channels:
   - conda-forge
@@ -6,7 +6,7 @@ channels:
   - rdkit
 
 dependencies:
-  - python>=3.8
+  - python==3.8
   - pip>=20.0.2
   - rdkit>=2020.03.1.0
   - scikit-learn>=1.1.1
@@ -18,4 +18,4 @@ dependencies:
     - git+https://github.com/Xiangyan93/chemprop.git@alb
     - rxntools>=0.0.2
     - scipy>=1.8.1
-    - mgktools>=0.0.2
+    - mgktools==0.0.3
