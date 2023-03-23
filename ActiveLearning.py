@@ -40,6 +40,7 @@ def main(args: ActiveLearningArgs) -> ActiveLearner:
                                        evaluate_stride=args.evaluate_stride,
                                        extra_evaluators_only=args.extra_evaluators_only,
                                        save_cpt_stride=args.save_cpt_stride,
+                                       no_eval=args.no_eval,
                                        logger=args.logger,
                                        seed=args.seed)
     else:
@@ -65,6 +66,7 @@ def main(args: ActiveLearningArgs) -> ActiveLearner:
                                        evaluate_stride=args.evaluate_stride,
                                        extra_evaluators_only=args.extra_evaluators_only,
                                        save_cpt_stride=args.save_cpt_stride,
+                                       no_eval=args.no_eval,
                                        logger=args.logger,
                                        seed=args.seed)
     active_learner.run()

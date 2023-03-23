@@ -290,6 +290,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """save checkpoint file every no. steps of active learning iteration."""
     load_checkpoint: bool = False
     """load"""
+    no_eval: bool = False
+    """Do not evaluate the performance of AL."""
 
     @property
     def model_selector(self):
