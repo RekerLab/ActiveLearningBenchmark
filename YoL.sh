@@ -3,7 +3,6 @@ ntasks=1
 n_stride=1
 for((i=0;i<14;++i))
 do
-	break
 	dataset=${datasets[$i]}
 	file=data/$dataset/"$dataset"_training.csv
 	echo $dataset
