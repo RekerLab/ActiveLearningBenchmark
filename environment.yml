@@ -1,4 +1,4 @@
-name: alb_003
+name: alb
 
 channels:
   - conda-forge
