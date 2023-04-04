@@ -196,7 +196,8 @@ class ActiveLearner:
                 break
             self.info('Start an new iteration of active learning: %d.' % n_iter)
             # training
-            self.model_selector.fit(self.dataset_train_selector)
+            if self.learning_type != 'passive' or not self.no_eval:
+                self.model_selector.fit(self.dataset_train_selector)
             # evaluate
             if not self.no_eval and self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
                 self.evaluate()
