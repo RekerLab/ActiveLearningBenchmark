@@ -1,3 +1,6 @@
+
+![ActiveLearningBenchmark2](https://user-images.githubusercontent.com/127516906/230432117-43e7f5b6-db93-4688-a2de-13d55fe3b0e9.png)
+
 # ActiveLearningBenchmark
 Benchmarking for molecular active learning.
 
