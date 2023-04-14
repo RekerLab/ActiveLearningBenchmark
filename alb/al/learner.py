@@ -212,7 +212,7 @@ class ActiveLearner:
             # training
             self.model_selector.fit(self.dataset_train_selector)
             # evaluate
-            if self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
+            if self.evaluate_stride is not None and (self.train_size -2 ) % self.evaluate_stride == 0:
                 self.evaluate()
             # add sample
             self.add_samples()
