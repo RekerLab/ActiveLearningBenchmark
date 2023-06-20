@@ -85,6 +85,7 @@ class ActiveLearner:
                  evaluate_stride: int = None,
                  extra_evaluators_only: bool = False,
                  save_cpt_stride: int = None,
+                 no_eval: bool = False,
                  seed: int = 0,
                  logger: Logger = None):
         self.save_dir = save_dir
@@ -115,6 +116,7 @@ class ActiveLearner:
         self.evaluate_stride = evaluate_stride
         self.extra_evaluators_only = extra_evaluators_only
         self.save_cpt_stride = save_cpt_stride
+        self.no_eval = no_eval
 
         self.seed = seed
         if logger is not None:
@@ -194,9 +196,10 @@ class ActiveLearner:
                 break
             self.info('Start an new iteration of active learning: %d.' % n_iter)
             # training
-            self.model_selector.fit(self.dataset_train_selector)
+            if self.learning_type != 'passive' or not self.no_eval:
+                self.model_selector.fit(self.dataset_train_selector)
             # evaluate
-            if self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
+            if not self.no_eval and self.evaluate_stride is not None and self.train_size % self.evaluate_stride == 0:
                 self.evaluate()
             # add sample
             self.add_samples()
@@ -207,8 +210,8 @@ class ActiveLearner:
                 self.info('save checkpoint file %s/al.pkl' % self.save_dir)
             self.info('Training set size = %i' % self.train_size)
             self.info('Pool set size = %i' % self.pool_size)
-        if len(self.active_learning_traj_dict['training_size']) == 0 or \
-                self.active_learning_traj_dict['training_size'][-1] != self.train_size:
+        if not self.no_eval and (len(self.active_learning_traj_dict['training_size']) == 0 or
+                                 self.active_learning_traj_dict['training_size'][-1] != self.train_size):
             self.model_selector.fit(self.dataset_train_selector)
             self.evaluate()
         if self.save_cpt_stride:
