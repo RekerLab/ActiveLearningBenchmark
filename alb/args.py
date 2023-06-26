@@ -110,11 +110,20 @@ class DatasetArgs(CommonArgs):
             self.pure_columns = ['smiles']
             self.target_columns = ['-logKd/Ki']
             self.dataset_type = 'regression'
-        elif self.data_public in ['ld50_zhu', 'caco2_wang', 'solubility_aqsoldb', 'ppbr_az', 'vdss_lombardo',
-                                  'Half_Life_Obach', 'Clearance_Hepatocyte_AZ']:
+        elif self.data_public in ['ld50_zhu', 'caco2_wang', 'solubility_aqsoldb']:
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
             self.pure_columns = ['Drug']
             self.target_columns = ['Y']
+            self.dataset_type = 'regression'
+        elif self.data_public in ['Half_Life_Obach', 'vdss_lombardo', 'Clearance_Hepatocyte_AZ']:
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['Drug']
+            self.target_columns = ['log_Y']
+            self.dataset_type = 'regression'
+        elif self.data_public == 'ppbr_az':
+            self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
+            self.pure_columns = ['Drug']
+            self.target_columns = ['log_ratio']
             self.dataset_type = 'regression'
         elif self.data_public == 'bbbp':
             self.data_path = os.path.join(CWD, 'data', '%s.csv' % self.data_public)
@@ -314,6 +323,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """the percent of the training set that will be affected by error."""
     save_cpt_stride: int = None
     """save checkpoint file every no. steps of active learning iteration."""
+    save_preds: bool = False
+    """whether to save per-sample predictions of validation set during active learning."""
     load_checkpoint: bool = False
     """load"""
     n_iter: int = None
