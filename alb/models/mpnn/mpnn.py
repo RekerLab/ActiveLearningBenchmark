@@ -113,7 +113,7 @@ class MPNN:
         self.features_scaler = None
         self.logger = logger
 
-    def fit(self, train_data):
+    def fit_alb(self, train_data):
         args = self.args
         args.train_data_size = len(train_data)
         logger = self.logger

@@ -8,7 +8,7 @@ import sys
 
 sys.path.append('%s/..' % CWD)
 from alb.args import ActiveLearningArgs
-from ActiveLearning import main
+from scripts.ActiveLearning import main
 
 
 @pytest.mark.parametrize('dataset', [

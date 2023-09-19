@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-
-CWD = os.path.dirname(os.path.abspath(__file__))
 from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple, Callable
 from logging import Logger
 import pickle
+import pandas as pd
 from sklearn.gaussian_process.kernels import RBF, DotProduct
 from mgktools.kernels.utils import get_kernel_config
 from mgktools.data.data import Dataset
@@ -20,8 +19,6 @@ class EmptyLogger:
 
 
 def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
-             # dataset_type: Literal['regression', 'classification', 'multiclass'],
-             # model: Literal['random_forest', 'gaussian_process', 'support_vector_machine'],
              path: str,
              pure_columns: List[str] = None,
              mixture_columns: List[str] = None,
@@ -33,37 +30,43 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
              n_jobs: int = 8):
     if data_format == 'fingerprints':
         from alb.data.utils import get_data
-        return get_data(path=path,
-                        pure_columns=pure_columns,
-                        mixture_columns=mixture_columns,
-                        target_columns=target_columns,
-                        feature_columns=feature_columns,
-                        features_generator=features_generator,
-                        features_combination=features_combination,
-                        n_jobs=n_jobs)
+        dataset = get_data(path=path,
+                           pure_columns=pure_columns,
+                           mixture_columns=mixture_columns,
+                           target_columns=target_columns,
+                           feature_columns=feature_columns,
+                           features_generator=features_generator,
+                           features_combination=features_combination,
+                           n_jobs=n_jobs)
     elif data_format == 'chemprop':
         from chemprop.data.utils import get_data
         assert mixture_columns is None
         assert feature_columns is None
-        return get_data(path=path,
-                        smiles_columns=pure_columns,
-                        target_columns=target_columns,
-                        features_generator=features_generator)
+        dataset = get_data(path=path,
+                           smiles_columns=pure_columns,
+                           target_columns=target_columns,
+                           features_generator=features_generator)
     elif data_format == 'mgktools':
         assert graph_kernel_type is not None
         from mgktools.data.data import get_data
-        return get_data(path=path,
-                        pure_columns=pure_columns,
-                        mixture_columns=mixture_columns,
-                        target_columns=target_columns,
-                        feature_columns=feature_columns,
-                        features_generator=features_generator,
-                        features_combination=features_combination,
-                        mixture_type='single_graph',
-                        graph_kernel_type=graph_kernel_type,
-                        n_jobs=n_jobs)
+        dataset = get_data(path=path,
+                           pure_columns=pure_columns,
+                           mixture_columns=mixture_columns,
+                           target_columns=target_columns,
+                           feature_columns=feature_columns,
+                           features_generator=features_generator,
+                           features_combination=features_combination,
+                           mixture_type='single_graph',
+                           graph_kernel_type=graph_kernel_type,
+                           n_jobs=n_jobs)
     else:
         raise ValueError('input error')
+    df = pd.read_csv(path)
+    if 'id' not in df:
+        df['id'] = range(len(df))
+    for i, data in enumerate(dataset):
+        data.id = df.iloc[i]['id']
+    return dataset
 
 
 def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
@@ -71,7 +74,7 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
               model: Literal['random_forest', 'naive_bayes', 'gaussian_process', 'support_vector_machine'],
               save_dir: str = None,
               loss_function: Literal['mse', 'bounded_mse', 'binary_cross_entropy', 'cross_entropy', 'mcc', 'sid',
-                                     'wasserstein', 'mve', 'evidential', 'dirichlet'] = None,
+              'wasserstein', 'mve', 'evidential', 'dirichlet'] = None,
               num_tasks: int = 1,
               multiclass_num_classes: int = 3,
               features_generator=None,
