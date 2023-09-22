@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from graphdot.model.gaussian_process import GaussianProcessRegressor as GPR
+from alb.models.base import BaseModel
 
 
-class GPRegressor(GPR):
+class GPRegressor(GPR, BaseModel):
     def __init__(self, *args, **kwargs):
         uncertainty_type = kwargs.pop('uncertainty_type')
         super().__init__(*args, **kwargs)
         self.uncertainty_type = uncertainty_type
 
-    def fit(self, train_data, **kwargs):
+    def fit_alb(self, train_data, **kwargs):
         X = train_data.X
         y = train_data.y
         super().fit(X, y, **kwargs)
