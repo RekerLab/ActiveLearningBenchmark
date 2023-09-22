@@ -340,12 +340,12 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
 
     @property
     def model_evaluators(self):
-        if not hasattr(self, '_model_extra_evaluators'):
+        if not hasattr(self, '_model_evaluators'):
             self._model_evaluators = [get_model(
                 data_format=model_config['data_format'],
                 dataset_type=self.dataset_type,
                 model=model_config.get('model'),
-                save_dir='%s/extra_evaluator_%d' % (self.save_dir, i),
+                save_dir='%s/evaluator_%d' % (self.save_dir, i),
                 loss_function=model_config.get('loss_function'),
                 num_tasks=len(self.target_columns),
                 multiclass_num_classes=model_config.get('loss_function') or 3,
@@ -429,8 +429,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
 
     @property
     def data_train_evaluators(self):
-        if not hasattr(self, '_data_train_extra_evaluators'):
-            self._data_train_extra_evaluators = [get_data(
+        if not hasattr(self, '_data_train_evaluators'):
+            self._data_train_evaluators = [get_data(
                 data_format=model_config['data_format'],
                 path='%s/train_init.csv' % self.save_dir,
                 pure_columns=self.pure_columns,
@@ -441,12 +441,12 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_evaluators_dict)]
-        return self._data_train_extra_evaluators
+        return self._data_train_evaluators
 
     @property
     def data_pool_evaluators(self):
-        if not hasattr(self, '_data_pool_extra_evaluators'):
-            self._data_pool_extra_evaluators = [get_data(
+        if not hasattr(self, '_data_pool_evaluators'):
+            self._data_pool_evaluators = [get_data(
                 data_format=model_config['data_format'],
                 path='%s/pool_init.csv' % self.save_dir,
                 pure_columns=self.pure_columns,
@@ -457,12 +457,12 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_evaluators_dict)]
-        return self._data_pool_extra_evaluators
+        return self._data_pool_evaluators
 
     @property
     def data_val_evaluators(self):
-        if not hasattr(self, '_data_val_extra_evaluators'):
-            self._data_val_extra_evaluators = [get_data(
+        if not hasattr(self, '_data_val_evaluators'):
+            self._data_val_evaluators = [get_data(
                 data_format=model_config['data_format'],
                 path='%s/val.csv' % self.save_dir,
                 pure_columns=self.pure_columns,
@@ -473,7 +473,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_evaluators_dict)]
-        return self._data_val_extra_evaluators
+        return self._data_val_evaluators
 
     @property
     def data_full_selector(self):
@@ -493,8 +493,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
 
     @property
     def data_full_evaluators(self) -> List:
-        if not hasattr(self, '_data_full_extra_evaluators'):
-            self._data_full_extra_evaluators = [get_data(
+        if not hasattr(self, '_data_full_evaluators'):
+            self._data_full_evaluators = [get_data(
                 data_format=model_config['data_format'],
                 path=self.data_path,
                 pure_columns=self.pure_columns,
@@ -505,7 +505,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 features_combination=model_config.get('features_combination'),
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 n_jobs=self.n_jobs) for i, model_config in enumerate(self.model_config_evaluators_dict)]
-        return self._data_full_extra_evaluators
+        return self._data_full_evaluators
 
     @property
     def features_generator_selector(self) -> Optional[List[FeaturesGenerator]]:
@@ -548,17 +548,17 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
 
     @property
     def kernel_evaluators(self) -> List:
-        if not hasattr(self, '_kernel_extra_evaluators'):
-            self._kernel_extra_evaluators = [get_kernel(
+        if not hasattr(self, '_kernel_evaluators'):
+            self._kernel_evaluators = [get_kernel(
                 graph_kernel_type=model_config.get('graph_kernel_type'),
                 mgk_files=model_config.get('mgk_files'),
                 features_kernel_type=model_config.get('features_kernel_type'),
                 features_hyperparameters=model_config.get('features_hyperparameters'),
                 features_hyperparameters_file=model_config.get('features_hyperparameters_file'),
                 dataset=self.data_full_evaluators[i],
-                kernel_pkl_path='%s/kernel_extra_evaluator_%d.pkl' % (self.save_dir, i),
+                kernel_pkl_path='%s/kernel_evaluator_%d.pkl' % (self.save_dir, i),
             ) for i, model_config in enumerate(self.model_config_evaluators_dict)]
-        return self._kernel_extra_evaluators
+        return self._kernel_evaluators
 
     @property
     def selection_method(self):
@@ -759,7 +759,7 @@ class ReEvaluateArgs(CommonArgs):
                 data_format=self.model_config_evaluator_dict['data_format'],
                 dataset_type=self.dataset_type,
                 model=self.model_config_evaluator_dict.get('model'),
-                save_dir='%s/extra_evaluator_%d' % (self.save_dir, self.evaluator_id),
+                save_dir='%s/evaluator_%d' % (self.save_dir, self.evaluator_id),
                 loss_function=self.model_config_evaluator_dict.get('loss_function'),
                 num_tasks=len(self.target_columns),
                 multiclass_num_classes=self.model_config_evaluator_dict.get('loss_function') or 3,
@@ -862,7 +862,7 @@ class ReEvaluateArgs(CommonArgs):
             features_hyperparameters=self.model_config_evaluator_dict.get('features_hyperparameters'),
             features_hyperparameters_file=self.model_config_evaluator_dict.get('features_hyperparameters_file'),
             dataset=self.data_full_evaluator,
-            kernel_pkl_path='%s/kernel_extra_evaluator_%d.pkl' % (self.save_dir, self.evaluator_id),
+            kernel_pkl_path='%s/kernel_evaluator_%d.pkl' % (self.save_dir, self.evaluator_id),
         )
 
     def process_args(self) -> None:

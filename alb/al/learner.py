@@ -216,7 +216,7 @@ class ActiveLearner:
         # yoked learning
         for i, model in enumerate(self.model_evaluators):
             if self.metrics is not None:
-                model.fit(self.dataset_train_evaluators[i])
+                model.fit_alb(self.dataset_train_evaluators[i])
                 y_pred = model.predict_value(self.dataset_val_evaluators[i])
                 for metric in self.metrics:
                     metric_value = eval_metric_func(self.dataset_val_evaluators[i].y, y_pred, metric=metric)
