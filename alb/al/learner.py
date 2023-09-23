@@ -279,12 +279,10 @@ class ActiveLearner:
     @staticmethod
     def get_top_k_score(dataset, top_k_id) -> float:
         N_top_k = 0
-        N = 0
         for data in dataset:
-            N += 1
             if data.id in top_k_id:
                 N_top_k += 1
-        return N_top_k / N
+        return N_top_k / len(top_k_id)
 
     def save(self, path, filename='al.pkl', overwrite=False):
         f_al = os.path.join(path, filename)
