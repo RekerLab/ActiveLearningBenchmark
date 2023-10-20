@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
 from tqdm import tqdm
-from alb.args import ReEvaluateArgs
-from alb.al.learner import eval_metric_func
+from molalkit.args import ReEvaluateArgs
+from molalkit.al.learner import eval_metric_func
 
 
 def main(args: ReEvaluateArgs) -> None:

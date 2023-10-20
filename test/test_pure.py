@@ -7,7 +7,7 @@ CWD = os.path.dirname(os.path.abspath(__file__))
 import sys
 
 sys.path.append('%s/..' % CWD)
-from alb.args import ActiveLearningArgs
+from molalkit.args import ActiveLearningArgs
 from scripts.ActiveLearning import main
 
 

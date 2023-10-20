@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from sklearn.svm import SVC
-from alb.models.base import BaseSklearnModel
+from molalkit.models.base import BaseSklearnModel
 
 
 class SVClassifier(SVC, BaseSklearnModel):

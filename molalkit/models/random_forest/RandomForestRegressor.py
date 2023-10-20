@@ -3,7 +3,7 @@
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble._forest import check_is_fitted, _partition_estimators, Parallel, delayed, _accumulate_prediction
-from alb.models.base import BaseSklearnModel
+from molalkit.models.base import BaseSklearnModel
 
 
 class RFRegressor(RandomForestRegressor, BaseSklearnModel):

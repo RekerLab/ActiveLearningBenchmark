@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from mgktools.models.classification.gpc.gpc import GaussianProcessClassifier
-from alb.models.base import BaseSklearnModel
+from molalkit.models.base import BaseSklearnModel
 
 
 class GPClassifier(GaussianProcessClassifier, BaseSklearnModel):

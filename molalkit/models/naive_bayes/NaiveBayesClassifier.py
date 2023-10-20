@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from sklearn.naive_bayes import BernoulliNB
-from alb.models.base import BaseSklearnModel
+from molalkit.models.base import BaseSklearnModel
 
 
 class NBClassifier(BernoulliNB, BaseSklearnModel):

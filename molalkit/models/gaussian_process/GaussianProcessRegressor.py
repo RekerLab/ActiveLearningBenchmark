@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from graphdot.model.gaussian_process import GaussianProcessRegressor as GPR
-from alb.models.base import BaseModel
+from molalkit.models.base import BaseModel
 
 
 class GPRegressor(GPR, BaseModel):

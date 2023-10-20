@@ -3,7 +3,7 @@ import os
 import re
 import setuptools
 
-with open('alb/__init__.py') as fd:
+with open('molalkit/__init__.py') as fd:
     __version__ = re.search("__version__ = '(.*)'", fd.read()).group(1)
 
 
@@ -20,13 +20,18 @@ def read(*filenames, **kwargs):
 long_description = read('README.md')
 
 setuptools.setup(
-    name='alb',
+    name='molalkit',
     version=__version__,
     python_requires='>=3.8',
     install_requires=[
         'typed-argument-parser',
         'rdkit',
     ],
+    entry_points={
+        'console_scripts': [
+            'molalkit_run=molalkit.al:run',
+        ]
+    },
     author='Yan Xiang',
     author_email='yan.xiang@duke.edu',
     description='Active Learning Benchmark.',

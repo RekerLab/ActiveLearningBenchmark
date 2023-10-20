@@ -11,11 +11,11 @@ import pandas as pd
 import numpy as np
 from mgktools.features_mol import FeaturesGenerator
 from mgktools.data.split import data_split_index
-from alb.logging import create_logger
-from alb.utils import get_data, get_model, get_kernel
-from alb.data.data import DATA_DIR
-from alb.al.selection_method import *
-from alb.al.forgetter import *
+from molalkit.logging import create_logger
+from molalkit.utils import get_data, get_model, get_kernel
+from molalkit.data.data import DATA_DIR
+from molalkit.al.selection_method import *
+from molalkit.al.forgetter import *
 
 Metric = Literal['roc-auc', 'accuracy', 'precision', 'recall', 'f1_score', 'mcc',
 'rmse', 'mae', 'mse', 'r2', 'max']

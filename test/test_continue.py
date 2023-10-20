@@ -5,7 +5,7 @@ import os
 CWD = os.path.dirname(os.path.abspath(__file__))
 import sys
 sys.path.append('%s/..' % CWD)
-from alb.args import ActiveLearningArgs, ActiveLearningContinueArgs
+from molalkit.args import ActiveLearningArgs, ActiveLearningContinueArgs
 
 
 @pytest.mark.parametrize('dataset', [

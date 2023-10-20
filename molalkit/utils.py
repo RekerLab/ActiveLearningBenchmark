@@ -29,7 +29,7 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
              graph_kernel_type: Literal['graph', 'pre-computed'] = None,
              n_jobs: int = 8):
     if data_format == 'fingerprints':
-        from alb.data.utils import get_data
+        from molalkit.data.utils import get_data
         dataset = get_data(path=path,
                            pure_columns=pure_columns,
                            mixture_columns=mixture_columns,
@@ -111,36 +111,36 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
     if data_format == 'fingerprints':
         if model == 'random_forest':
             if dataset_type == 'regression':
-                from alb.models.random_forest.RandomForestRegressor import RFRegressor
+                from molalkit.models.random_forest.RandomForestRegressor import RFRegressor
                 return RFRegressor(random_state=seed)
             else:
-                from alb.models.random_forest.RandomForestClassifier import RFClassifier
+                from molalkit.models.random_forest.RandomForestClassifier import RFClassifier
                 return RFClassifier(random_state=seed, oob_score=True)
         elif model == 'naive_bayes':
             assert dataset_type == 'classification'
-            from alb.models.naive_bayes.NaiveBayesClassifier import NBClassifier
+            from molalkit.models.naive_bayes.NaiveBayesClassifier import NBClassifier
             return NBClassifier()
         elif model == 'logistic_regression':
             assert dataset_type == 'classification'
-            from alb.models.logistic_regression.LogisticRegression import LogisticRegressor
+            from molalkit.models.logistic_regression.LogisticRegression import LogisticRegressor
             return LogisticRegressor(random_state=seed)
         elif model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None
-            from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
+            from molalkit.models.gaussian_process.GaussianProcessRegressor import GPRegressor
             return GPRegressor(kernel=kernel, alpha=alpha, optimizer=None, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
-            from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
+            from molalkit.models.gaussian_process.GaussianProcessClassifier import GPClassifier
             return GPClassifier(kernel=kernel, optimizer=None)
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
-            from alb.models.support_vector.SupportVectorClassifier import SVClassifier
+            from molalkit.models.support_vector.SupportVectorClassifier import SVClassifier
             return SVClassifier(kernel=kernel, probability=True)
         else:
             raise ValueError(f'unknown model: {model}')
     elif data_format == 'chemprop':
-        from alb.models.mpnn.mpnn import MPNN
+        from molalkit.models.mpnn.mpnn import MPNN
         return MPNN(save_dir=save_dir,
                     dataset_type=dataset_type,
                     loss_function=loss_function,
@@ -174,15 +174,15 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
         if model == 'gaussian_process_regression':
             assert dataset_type in ['regression', 'classification']
             assert uncertainty_type is not None
-            from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
+            from molalkit.models.gaussian_process.GaussianProcessRegressor import GPRegressor
             return GPRegressor(kernel=kernel, alpha=alpha, optimizer=None, uncertainty_type=uncertainty_type)
         elif model == 'gaussian_process_classification':
             assert dataset_type == 'classification'
-            from alb.models.gaussian_process.GaussianProcessClassifier import GPClassifier
+            from molalkit.models.gaussian_process.GaussianProcessClassifier import GPClassifier
             return GPClassifier(kernel=kernel, optimizer=None)
         elif model == 'support_vector_machine':
             assert dataset_type == 'classification'
-            from alb.models.support_vector.SupportVectorClassifier import SVClassifier
+            from molalkit.models.support_vector.SupportVectorClassifier import SVClassifier
             return SVClassifier(kernel=kernel, probability=True)
         else:
             raise ValueError(f'unknown model: {model}')
