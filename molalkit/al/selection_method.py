@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC, abstractmethod
 from typing import Dict, Iterator, List, Optional, Union, Literal, Tuple, Callable
+import copy
 import numpy as np
 from collections import defaultdict
 from sklearn.cluster import KMeans
@@ -43,7 +44,7 @@ def get_topn_idx(values: np.ndarray, n: int = 1, target: Union[Literal['max', 'm
 
 
 def get_subset(dataset, idx):
-    subset = dataset.copy()
+    subset = copy.deepcopy(dataset)
     subset.data = [data for i, data in enumerate(dataset.data) if i in idx]
     return subset
 
