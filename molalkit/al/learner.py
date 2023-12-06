@@ -113,7 +113,7 @@ class ActiveLearner:
                  yoked_learning_only: bool = False,
                  stop_size: int = None, stop_cutoff: float = None,
                  n_query: int = None,
-                 evaluate_stride: int = None, kernel: Callable = None,
+                 evaluate_stride: int = None, output_details: bool = False, kernel: Callable = None,
                  save_cpt_stride: int = None,
                  seed: int = 0,
                  logger: Logger = None):
@@ -135,6 +135,7 @@ class ActiveLearner:
         self.stop_cutoff = stop_cutoff
         self.n_query = n_query
         self.evaluate_stride = evaluate_stride
+        self.output_details = output_details
         self.kernel = kernel  # used for cluster selection method
         self.save_cpt_stride = save_cpt_stride
 
@@ -246,6 +247,9 @@ class ActiveLearner:
                     self.model_selector.fit_alb(self.dataset_train_selector)
                     self.model_fitted = True
                 y_pred = self.model_selector.predict_value(self.dataset_val_selector)
+                if self.output_details:
+                    pd.DataFrame({'true': self.dataset_val_selector.y, 'pred': y_pred}).to_csv(
+                        os.path.join(self.save_dir, f'selector_{self.current_iter}.csv'), index=False)
                 for metric in self.metrics:
                     metric_value = eval_metric_func(self.dataset_val_selector.y, y_pred, metric=metric)
                     alr.results[f'{metric}_selector'] = metric_value
@@ -257,6 +261,9 @@ class ActiveLearner:
             if self.metrics is not None:
                 model.fit_alb(self.dataset_train_evaluators[i])
                 y_pred = model.predict_value(self.dataset_val_evaluators[i])
+                if self.output_details:
+                    pd.DataFrame({'true': self.dataset_val_selector.y, 'pred': y_pred}).to_csv(
+                        os.path.join(self.save_dir, f'evaluator_{i}_{self.current_iter}.csv'), index=False)
                 for metric in self.metrics:
                     metric_value = eval_metric_func(self.dataset_val_evaluators[i].y, y_pred, metric=metric)
                     alr.results[f'{metric}_evaluator_{i}'] = metric_value

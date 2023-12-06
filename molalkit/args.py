@@ -279,6 +279,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     evaluate_stride: int = None
     """evaluate model performance on the validation set when the size of the training set is an integer multiple of the 
     evaluation stride."""
+    output_details: bool = False
+    """output the details of each active learning iteration."""
     top_k: float = None
     """the ratio of top molecules are considered."""
     yoked_learning_only: bool = False
