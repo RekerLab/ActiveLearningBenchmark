@@ -291,8 +291,13 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """number of samples as the initial."""
     batch_size: int = 1
     """number of samples added in each active learning iteration."""
-    batch_mode: Literal['naive', 'clustering'] = 'naive'
+    batch_mode: Literal['naive', 'cluster'] = 'naive'
     """the method that add a batch of samples."""
+    cluster_size: int = None
+    """number of samples in each cluster. (default = 20 * batch_size)"""
+    n_query: int = None
+    """number of samples to query in each active learning iteration. (default=None means query all samples in the 
+    pool set)"""
     stop_ratio: float = None
     """Stop active learning when the selected molecules reach the ratio."""
     stop_size: int = None
@@ -586,17 +591,30 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 self.exploitive_target = float(self.exploitive_target)
             if self.learning_type == 'passive':
                 if self.batch_mode == 'cluster':
-                    self._selection_method = ClusterRandomSelectionMethod(seed=self.seed)
+                    self._selection_method = ClusterRandomSelectionMethod(cluster_size=self.cluster_size,
+                                                                          seed=self.seed)
                 else:
                     self._selection_method = RandomSelectionMethod(seed=self.seed)
             elif self.learning_type == 'explorative':
                 if self.batch_mode == 'cluster':
-                    self._selection_method = ClusterExplorativeSelectionMethod(seed=self.seed)
+                    if self.n_query is not None:
+                        self._selection_method = ClusterExplorativeParitialQuerySelectionMethod(
+                            cluster_size=self.cluster_size,
+                            n_query=self.n_query,
+                            seed=self.seed)
+                    else:
+                        self._selection_method = ClusterExplorativeSelectionMethod(cluster_size=self.cluster_size,
+                                                                                   seed=self.seed)
                 else:
-                    self._selection_method = ExplorativeSelectionMethod(seed=self.seed)
+                    if self.n_query is not None:
+                        self._selection_method = ExplorativeParitialQuerySelectionMethod(n_query=self.n_query,
+                                                                                         seed=self.seed)
+                    else:
+                        self._selection_method = ExplorativeSelectionMethod(seed=self.seed)
             elif self.learning_type == 'exploitive':
                 if self.batch_mode == 'cluster':
-                    self._selection_method = ClusterExploitiveSelectionMethod(target=self.exploitive_target,
+                    self._selection_method = ClusterExploitiveSelectionMethod(cluster_size=self.cluster_size,
+                                                                              target=self.exploitive_target,
                                                                               seed=self.seed)
                 else:
                     self._selection_method = ExploitiveSelectionMethod(target=self.exploitive_target, seed=self.seed)
