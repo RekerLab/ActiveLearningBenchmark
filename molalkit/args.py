@@ -226,16 +226,16 @@ class DatasetArgs(CommonArgs):
                 df['id'] = range(len(df))
                 df_train = pd.read_csv('%s/train_init.csv' % self.save_dir)
                 df_train['id'] = range(len(df_train))
-                df_train.to_csv('%s/train_init.csv' % self.save_dir)
+                df_train.to_csv('%s/train_init.csv' % self.save_dir, index=False)
                 df_pool = pd.read_csv('%s/pool_init.csv' % self.save_dir)
                 df_pool['id'] = range(len(df_pool))
                 df_pool['id'] += len(df_train)
-                df_pool.to_csv('%s/pool_init.csv' % self.save_dir)
+                df_pool.to_csv('%s/pool_init.csv' % self.save_dir, index=False)
                 df_val = pd.read_csv('%s/val.csv' % self.save_dir)
                 df_val['id'] = range(len(df_val))
                 df_val['id'] += len(df_train) + len(df_pool)
-                df_val.to_csv('%s/val.csv' % self.save_dir)
-            df.to_csv('%s/full.csv' % self.save_dir)
+                df_val.to_csv('%s/val.csv' % self.save_dir, index=False)
+            df.to_csv('%s/full.csv' % self.save_dir, index=False)
             self.data_path = '%s/full.csv' % self.save_dir
 
 
