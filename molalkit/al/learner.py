@@ -11,7 +11,10 @@ from logging import Logger
 from sklearn.metrics import *
 from ..args import Metric
 from .selection_method import BaseSelectionMethod, RandomSelectionMethod
-from .forgetter import BaseForgetter, RandomForgetter, FirstForgetter
+from alb.models.random_forest.RandomForestClassifier import RFClassifier
+from .forgetter import (BaseForgetter, RandomForgetter, FirstForgetter, 
+                        MinOOBUncertaintyForgetter, MaxOOBUncertaintyForgetter, 
+                        MinOOBErrorForgetter, MinLOOErrorForgetter)
 
 
 def eval_metric_func(y, y_pred, metric: str) -> float:
@@ -99,6 +102,8 @@ class ActiveLearningTrajectory:
         results_dict['id_forgotten'] = [json.dumps(alr.id_forgotten, cls=NpEncoder) for alr in self.results]
         results_dict['acquisition_forgotten'] = [json.dumps(alr.acquisition_forgotten,
                                                             cls=NpEncoder) for alr in self.results]
+        results_dict['min_error'] = [json.dumps(alr.min_error, cls=NpEncoder) for alr in self.results]
+        results_dict['max_error'] = [json.dumps(alr.max_error, cls=NpEncoder) for alr in self.results]
         results_dict['id_prior_al'] = [json.dumps(alr.id_prior_al, cls=NpEncoder) for alr in self.results]
         return results_dict
 
@@ -168,6 +173,7 @@ class ActiveLearner:
             info += f'\nForgetter: {self.forgetter.info}.'
         self.info(info)
         self.model_fitted = False
+
         for n_iter in range(self.current_iter, max_iter):
             alr = ActiveLearningResult(n_iter)
             alr.id_prior_al = self.get_id(self.dataset_train_selector)
@@ -177,6 +183,8 @@ class ActiveLearner:
             # evaluate
             if self.evaluate_stride is not None and n_iter % self.evaluate_stride == 0:
                 self.evaluate(alr)
+            
+            alr.min_error, alr.max_error = self.get_error()
             # add sample
             self.add_samples(alr)
             # forget sample
@@ -191,6 +199,9 @@ class ActiveLearner:
             self.info('Training set size = %i' % self.train_size)
             self.info('Pool set size = %i' % self.pool_size)
             self.active_learning_traj.results.append(alr)
+
+        train_ids = pd.DataFrame({'id':self.get_id(self.dataset_train_selector)})
+        train_ids.to_csv(os.path.join(self.save_dir, 'train_final_ids.csv'), index=False)
 
         df_traj = pd.DataFrame(self.active_learning_traj.get_results())
         df_traj.to_csv(os.path.join(self.save_dir, 'al_traj.csv'), index=False)
@@ -243,9 +254,9 @@ class ActiveLearner:
 
     def forget_samples(self, alr: ActiveLearningResult):
         # no forget algorithm is applied.
-        # or forget algorithm is applied when self.forgetter.forget_size <= self.train_size.
+        # or forget algorithm is applied when self.forgetter.forget_size < self.train_size.
         if self.forgetter is None or (self.forgetter.forget_size is not None and
-                                      self.forgetter.forget_size > self.train_size):
+                                      self.forgetter.forget_size >= self.train_size):
             alr.id_forgotten = []
             alr.acquisition_forgotten = []
             return
@@ -253,10 +264,19 @@ class ActiveLearner:
         if not self.model_fitted and not self.forgetter.__class__ in [RandomForgetter, FirstForgetter]:
             self.model_selector.fit_alb(self.dataset_train_selector)
         # forget algorithm is applied.
-        forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
-                                                    data=self.dataset_train_selector,
-                                                    batch_size=self.forgetter.batch_size,
-                                                    cutoff=self.forgetter.forget_cutoff)
+        if self.forgetter.__class__ in [MinOOBErrorForgetter, MinLOOErrorForgetter]:
+            forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
+                                                        data=self.dataset_train_selector,
+                                                        batch_size=self.forgetter.batch_size,
+                                                        cutoff=self.forgetter.forget_cutoff)
+        elif self.forgetter.__class__ in [RandomForgetter, FirstForgetter]:
+            forgotten_idx, acquisition = self.forgetter(data=self.dataset_train_selector,
+                                                        batch_size=self.forgetter.batch_size)
+        else:
+            forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
+                                                        data=self.dataset_train_selector,
+                                                        batch_size=self.forgetter.batch_size)
+
         if forgotten_idx:
             alr.id_forgotten = [self.dataset_train_selector.data[i].id for i in forgotten_idx]
             alr.acquisition_forgotten = acquisition
@@ -275,6 +295,22 @@ class ActiveLearner:
         for data in dataset:
             id_list.append(data.id)
         return id_list
+
+    def get_error(self):
+        #return minimum and maximum oob error of training set
+        
+        if not self.model_fitted:
+            self.model_selector.fit_alb(self.dataset_train_selector)
+            self.model_fitted = True
+        
+        #oob error
+        if isinstance(self.model_selector, RFClassifier):
+            y_oob_proba = self.model_selector.oob_decision_function_
+            error = np.absolute(y_oob_proba[:, 1] - self.dataset_train_selector.y)
+        else:
+            error = [np.nan]
+        return np.min(error), np.max(error)
+
 
     @staticmethod
     def get_top_k_score(dataset, top_k_id) -> float:
