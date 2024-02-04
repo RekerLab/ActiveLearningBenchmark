@@ -3,9 +3,9 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 import numpy as np
-from molalkit.models.random_forest.RandomForestClassifier import RFClassifier
-from molalkit.models.gaussian_process.GaussianProcessRegressor import GPRegressor
-from molalkit.al.selection_method import get_topn_idx
+from alb.models.random_forest.RandomForestClassifier import RFClassifier
+from alb.models.gaussian_process.GaussianProcessRegressor import GPRegressor
+from alb.al.selection_method import get_topn_idx
 
 
 class BaseForgetter(ABC):
@@ -69,6 +69,54 @@ class MinOOBUncertaintyForgetter(BaseRandomForgetter):
         return 'MinOOBUncertaintyForgetter'
 
 
+class MinOOBUncertaintyCorrectForgetter(BaseRandomForgetter):
+    """Forget samples with lowest out-of-bag (OOB) uncertainty that were correctly predicted OOB"""
+    def __call__(self, model: RFClassifier, data, batch_size: int = 1) -> Tuple[List[int], List[float]]:
+        assert batch_size < len(data)
+        assert isinstance(model, RFClassifier)
+        assert model.oob_score is True
+        y_oob_proba = model.oob_decision_function_
+        # uncertainty calculation, normalized into 0 to 1
+        y_oob_uncertainty = (0.25 - np.var(y_oob_proba, axis=1)) * 4
+        y_pred = np.argmax(y_oob_proba, axis=1)
+        y = data.y
+        incorrect = np.where(y_pred != y)[0]
+        # since want min correct, set incorrect predictions to 1.1 (will always be most uncertain and never chosen)
+        y_oob_uncertainty[incorrect] = 1.1
+        # select the top-n correct points with least uncertainty
+        forgotten_idx = get_topn_idx(y_oob_uncertainty, n=batch_size, target='min')
+        acquisition = y_oob_uncertainty[np.array(forgotten_idx)].tolist()
+        return forgotten_idx, acquisition
+
+    @property
+    def info(self) -> str:
+        return 'MinOOBUncertaintyCorrectForgetter'
+        
+
+class MinOOBUncertaintyIncorrectForgetter(BaseRandomForgetter):
+    """Forget samples with lowest out-of-bag (OOB) uncertainty that were incorrectly predicted OOB"""
+    def __call__(self, model: RFClassifier, data, batch_size: int = 1) -> Tuple[List[int], List[float]]:
+        assert batch_size < len(data)
+        assert isinstance(model, RFClassifier)
+        assert model.oob_score is True
+        y_oob_proba = model.oob_decision_function_
+        # uncertainty calculation, normalized into 0 to 1
+        y_oob_uncertainty = (0.25 - np.var(y_oob_proba, axis=1)) * 4
+        y_pred = np.argmax(y_oob_proba, axis=1)
+        y = data.y
+        correct = np.where(y_pred == y)[0]
+        # since want min incorrect, set correct predictions to 1.1 (will always be most uncertain and never chosen)
+        y_oob_uncertainty[correct] = 1.1
+        # select the top-n points with least uncertainty
+        forgotten_idx = get_topn_idx(y_oob_uncertainty, n=batch_size, target='min')
+        acquisition = y_oob_uncertainty[np.array(forgotten_idx)].tolist()
+        return forgotten_idx, acquisition
+
+    @property
+    def info(self) -> str:
+        return 'MinOOBUncertaintyInorrectForgetter'
+
+
 class MaxOOBUncertaintyForgetter(BaseRandomForgetter):
     def __call__(self, model: RFClassifier, data, batch_size: int = 1) -> Tuple[List[int], List[float]]:
         """ Forget the samples with the highest out-of-bag (OOB) uncertainty.
@@ -96,6 +144,53 @@ class MaxOOBUncertaintyForgetter(BaseRandomForgetter):
     @property
     def info(self) -> str:
         return 'MaxOOBUncertaintyForgetter'
+
+class MaxOOBUncertaintyCorrectForgetter(BaseRandomForgetter):
+    """Forget samples with highest out-of-bag (OOB) uncertainty that were correctly predicted OOB"""
+    def __call__(self, model: RFClassifier, data, batch_size: int = 1) -> Tuple[List[int], List[float]]:
+        assert batch_size < len(data)
+        assert isinstance(model, RFClassifier)
+        assert model.oob_score is True
+        y_oob_proba = model.oob_decision_function_
+        # uncertainty calculation, normalized into 0 to 1
+        y_oob_uncertainty = (0.25 - np.var(y_oob_proba, axis=1)) * 4
+        y_pred = np.argmax(y_oob_proba, axis=1)
+        y = data.y
+        incorrect = np.where(y_pred != y)[0]
+        # since want max correct, set incorrect predictions to -0.1 (will always be least uncertain and never chosen)
+        y_oob_uncertainty[incorrect] = -0.1
+        # select the top-n points with least uncertainty
+        forgotten_idx = get_topn_idx(y_oob_uncertainty, n=batch_size)
+        acquisition = y_oob_uncertainty[np.array(forgotten_idx)].tolist()
+        return forgotten_idx, acquisition
+
+    @property
+    def info(self) -> str:
+        return 'MaxOOBUncertaintyCorrectForgetter'
+        
+
+class MaxOOBUncertaintyIncorrectForgetter(BaseRandomForgetter):
+    """Forget samples with highest out-of-bag (OOB) uncertainty that were incorrectly predicted OOB"""
+    def __call__(self, model: RFClassifier, data, batch_size: int = 1) -> Tuple[List[int], List[float]]:
+        assert batch_size < len(data)
+        assert isinstance(model, RFClassifier)
+        assert model.oob_score is True
+        y_oob_proba = model.oob_decision_function_
+        # uncertainty calculation, normalized into 0 to 1
+        y_oob_uncertainty = (0.25 - np.var(y_oob_proba, axis=1)) * 4
+        y_pred = np.argmax(y_oob_proba, axis=1)
+        y = data.y
+        correct = np.where(y_pred == y)[0]
+        # since want max incorrect, set correct predictions to -0.1 (will always be least uncertain and never chosen)
+        y_oob_uncertainty[correct] = -0.1
+        # select the top-n points with least uncertainty
+        forgotten_idx = get_topn_idx(y_oob_uncertainty, n=batch_size)
+        acquisition = y_oob_uncertainty[np.array(forgotten_idx)].tolist()
+        return forgotten_idx, acquisition
+
+    @property
+    def info(self) -> str:
+        return 'MaxOOBUncertaintyInorrectForgetter'
 
 
 class MinOOBErrorForgetter(BaseRandomForgetter):
