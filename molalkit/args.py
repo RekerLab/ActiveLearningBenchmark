@@ -174,9 +174,13 @@ class DatasetArgs(CommonArgs):
                 df[df.index.isin(val_index)].to_csv('%s/val.csv' % self.save_dir, index=False)
                 df_al = df[df.index.isin(al_index)]
                 if self.error_rate is not None:
+                    assert self.dataset_type == 'classification' #classification task
                     # randomly select a portion of the training set to be affected by error
                     error_index = np.random.choice(al_index, int(self.error_rate * len(al_index)), replace=False)
+                    #recast types, requires int array for XOR
+                    df_al[self.target_columns[0]] = df_al[self.target_columns[0]].astype(int)
                     df_al.loc[df_al.index.isin(error_index), self.target_columns[0]] ^= 1
+                    df_al[self.target_columns[0]] = df_al[self.target_columns[0]].astype(float)
                     df_al.loc[df_al.index.isin(error_index), 'flip_label'] = True
                     df_al.loc[~df_al.index.isin(error_index), 'flip_label'] = False
             # split the active learning set into training and pool sets
@@ -287,8 +291,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     load_checkpoint: bool = False
     """load checkpoint file and continue the active learning."""
     # Arguments for forgetting active learning.
-    forget_protocol: Literal['forget_first', 'forget_random', 'min_oob_uncertainty', 'max_oob_uncertainty',
-    'min_oob_error', 'min_loo_error'] = None
+    forget_protocol: Literal['forget_first', 'forget_random', 'min_oob_uncertainty', 'min_oob_uncertainty_correct', 'min_oob_uncertainty_incorrect',
+    'max_oob_uncertainty', 'max_oob_uncertainty_correct', 'max_oob_uncertainty_incorrect', 'min_oob_error', 'min_loo_error'] = None
     """protocol to use (forget_first, forget_random, min_oob_uncertain (RF only), max_oob_uncertain (RF only)
     , min_loo_error)."""
     forget_cutoff: float = None
@@ -594,8 +598,16 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 forgeter = RandomForgetter(seed=0)
             elif self.forget_protocol == 'min_oob_uncertainty':
                 forgeter = MinOOBUncertaintyForgetter(seed=0)
+            elif self.forget_protocol == 'min_oob_uncertainty_correct':
+                forgeter = MinOOBUncertaintyCorrectForgetter(seed=0)
+            elif self.forget_protocol == 'min_oob_uncertainty_incorrect':
+                forgeter = MinOOBUncertaintyIncorrectForgetter(seed=0)
             elif self.forget_protocol == 'max_oob_uncertainty':
                 forgeter = MaxOOBUncertaintyForgetter(seed=0)
+            elif self.forget_protocol == 'max_oob_uncertainty_correct':
+                forgeter = MaxOOBUncertaintyCorrectForgetter(seed=0)
+            elif self.forget_protocol == 'max_oob_uncertainty_incorrect':
+                forgeter = MaxOOBUncertaintyIncorrectForgetter(seed=0)
             elif self.forget_protocol == 'min_oob_error':
                 forgeter = MinOOBErrorForgetter(seed=0)
             elif self.forget_protocol == 'min_loo_error':
@@ -612,7 +624,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 forgeter.forget_size = self.forget_size
             if self.forget_cutoff is not None:
                 assert self.forget_size is None
-                assert self.forget_protocol in ['max_oob_uncertainty', 'min_oob_uncertainty',
+                assert self.forget_protocol in ['min_oob_uncertainty', 'min_oob_uncertainty_correct', 'min_oob_uncertainty_incorrect',
+                                                'max_oob_uncertainty', 'max_oob_uncertainty_correct', 'max_oob_uncertainty_incorrect', 
                                                 'min_oob_error', 'min_loo_error']
             forgeter.forget_cutoff = self.forget_cutoff
             forgeter.batch_size = 1
