@@ -11,7 +11,7 @@ from logging import Logger
 from sklearn.metrics import *
 from ..args import Metric
 from .selection_method import BaseSelectionMethod, RandomSelectionMethod
-from alb.models.random_forest.RandomForestClassifier import RFClassifier
+from molalkit.models.random_forest.RandomForestClassifier import RFClassifier
 from .forgetter import (BaseForgetter, RandomForgetter, FirstForgetter, 
                         MinOOBUncertaintyForgetter, MaxOOBUncertaintyForgetter, 
                         MinOOBErrorForgetter, MinLOOErrorForgetter)
