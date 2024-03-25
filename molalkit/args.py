@@ -292,7 +292,7 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """load checkpoint file and continue the active learning."""
     # Arguments for forgetting active learning.
     forget_protocol: Literal['forget_first', 'forget_random', 'min_oob_uncertainty', 'min_oob_uncertainty_correct', 'min_oob_uncertainty_incorrect',
-    'max_oob_uncertainty', 'max_oob_uncertainty_correct', 'max_oob_uncertainty_incorrect', 'min_oob_error', 'min_loo_error'] = None
+    'max_oob_uncertainty', 'max_oob_uncertainty_correct', 'max_oob_uncertainty_incorrect', 'min_oob_error', 'min_loo_error', 'min_oob_uncertainty_incorrect_no_repeat'] = None
     """protocol to use (forget_first, forget_random, min_oob_uncertain (RF only), max_oob_uncertain (RF only)
     , min_loo_error)."""
     forget_cutoff: float = None
@@ -612,6 +612,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                 forgeter = MinOOBErrorForgetter(seed=0)
             elif self.forget_protocol == 'min_loo_error':
                 forgeter = MinLOOErrorForgetter(seed=0)
+            elif self.forget_protocol == 'min_oob_uncertainty_incorrect_no_repeat':
+                forgeter = MinOOBUncertaintyIncorrectNoRepeat(seed=0)
             else:
                 return None
             # set forget_size and forget_cutoff in forgetter.

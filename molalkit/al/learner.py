@@ -14,7 +14,7 @@ from .selection_method import BaseSelectionMethod, RandomSelectionMethod
 from molalkit.models.random_forest.RandomForestClassifier import RFClassifier
 from .forgetter import (BaseForgetter, RandomForgetter, FirstForgetter, 
                         MinOOBUncertaintyForgetter, MaxOOBUncertaintyForgetter, 
-                        MinOOBErrorForgetter, MinLOOErrorForgetter)
+                        MinOOBErrorForgetter, MinLOOErrorForgetter, MinOOBUncertaintyIncorrectNoRepeat)
 
 
 def eval_metric_func(y, y_pred, metric: str) -> float:
@@ -139,6 +139,8 @@ class ActiveLearner:
         self.kernel = kernel  # used for cluster selection method
         self.save_cpt_stride = save_cpt_stride
 
+        self.prev_forgotten_id = [] #list of forgotten ids from previous iteration
+
         self.seed = seed
         if logger is not None:
             self.info = logger.info
@@ -244,6 +246,7 @@ class ActiveLearner:
                                                           kernel=self.kernel)
         alr.id_add = [self.dataset_pool_selector.data[i].id for i in selected_idx]
         alr.acquisition_add = acquisition
+        self.info(f'adding point id: {alr.id_add}, idx: {selected_idx}.')
         # transfer data from pool to train.
         for i in sorted(selected_idx, reverse=True):
             self.dataset_train_selector.data.append(self.dataset_pool_selector.data.pop(i))
@@ -263,31 +266,63 @@ class ActiveLearner:
         # train the model if the forgetter is not random or first.
         if not self.model_fitted and not self.forgetter.__class__ in [RandomForgetter, FirstForgetter]:
             self.model_selector.fit_alb(self.dataset_train_selector)
-        # forget algorithm is applied.
-        if self.forgetter.__class__ in [MinOOBErrorForgetter, MinLOOErrorForgetter]:
-            forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
-                                                        data=self.dataset_train_selector,
-                                                        batch_size=self.forgetter.batch_size,
-                                                        cutoff=self.forgetter.forget_cutoff)
-        elif self.forgetter.__class__ in [RandomForgetter, FirstForgetter]:
-            forgotten_idx, acquisition = self.forgetter(data=self.dataset_train_selector,
-                                                        batch_size=self.forgetter.batch_size)
-        else:
-            forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
-                                                        data=self.dataset_train_selector,
-                                                        batch_size=self.forgetter.batch_size)
 
-        if forgotten_idx:
-            alr.id_forgotten = [self.dataset_train_selector.data[i].id for i in forgotten_idx]
-            alr.acquisition_forgotten = acquisition
-            # transfer data from train to pool.
+
+        # forget algorithm is applied.
+        #apply forget algorithm with no repeats allowed
+        if self.forgetter.__class__ in [MinOOBUncertaintyIncorrectNoRepeat]:
+            forgotten_idxs, acquisition = self.forgetter(model=self.model_selector,
+                                                            data=self.dataset_train_selector)
+            top_id_forgotten = []
+            top_acquisition_forgotten = []
+            forgotten_idx = []
+            id_iter = 1
+            while len(top_id_forgotten) < self.forgetter.batch_size:
+                curr_idx = forgotten_idxs[-id_iter]
+                curr_acquisition = acquisition[-id_iter]
+                curr_id_forgotten = self.dataset_train_selector.data[curr_idx].id
+                if curr_id_forgotten not in self.prev_forgotten_id:
+                    top_id_forgotten.append(curr_id_forgotten)
+                    forgotten_idx.append(curr_idx) #for transfer
+                    self.info(f'forgetting point id: {curr_id_forgotten}, idx: {curr_idx}.')
+                    top_acquisition_forgotten.append(curr_acquisition)
+                else:
+                    self.info(f'repeat datapoint found, id: {curr_id_forgotten}, idx: {curr_idx}.')
+                    id_iter += 1
+            alr.id_forgotten = top_id_forgotten
+            alr.acquisition_forgotten = top_acquisition_forgotten
+            self.prev_forgotten_id = top_id_forgotten
+             # transfer data from train to pool.
             for i in sorted(forgotten_idx, reverse=True):
                 self.dataset_pool_selector.data.append(self.dataset_train_selector.data.pop(i))
                 for j in range(len(self.model_evaluators)):
                     self.dataset_pool_evaluators[j].data.append(self.dataset_train_evaluators[j].data.pop(i))
+        #apply other forget algorithms
         else:
-            alr.id_forgotten = []
-            alr.acquisition_forgotten = []
+            if self.forgetter.__class__ in [MinOOBErrorForgetter, MinLOOErrorForgetter]:
+                forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
+                                                            data=self.dataset_train_selector,
+                                                            batch_size=self.forgetter.batch_size,
+                                                            cutoff=self.forgetter.forget_cutoff)
+            elif self.forgetter.__class__ in [RandomForgetter, FirstForgetter]:
+                forgotten_idx, acquisition = self.forgetter(data=self.dataset_train_selector,
+                                                            batch_size=self.forgetter.batch_size)
+            else:
+                forgotten_idx, acquisition = self.forgetter(model=self.model_selector,
+                                                            data=self.dataset_train_selector,
+                                                            batch_size=self.forgetter.batch_size)
+
+            if forgotten_idx:
+                alr.id_forgotten = [self.dataset_train_selector.data[i].id for i in forgotten_idx]
+                alr.acquisition_forgotten = acquisition
+                # transfer data from train to pool.
+                for i in sorted(forgotten_idx, reverse=True):
+                    self.dataset_pool_selector.data.append(self.dataset_train_selector.data.pop(i))
+                    for j in range(len(self.model_evaluators)):
+                        self.dataset_pool_evaluators[j].data.append(self.dataset_train_evaluators[j].data.pop(i))
+            else:
+                alr.id_forgotten = []
+                alr.acquisition_forgotten = []
 
     @staticmethod
     def get_id(dataset):
