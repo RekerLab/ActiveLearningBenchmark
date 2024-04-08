@@ -20,6 +20,8 @@ def run() -> ActiveLearner:
         active_learner = ActiveLearner(save_dir=args.save_dir,
                                        selection_method=args.selection_method,
                                        forgetter=args.forgetter,
+                                       repeat=args.repeat,
+                                       batch_size=args.batch_size,
                                        model_selector=args.model_selector,
                                        dataset_train_selector=args.data_train_selector,
                                        dataset_pool_selector=args.data_pool_selector,
