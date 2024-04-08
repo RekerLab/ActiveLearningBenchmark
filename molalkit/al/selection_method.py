@@ -124,6 +124,7 @@ class ClusterRandomSelectionMethod(BaseClusterSelectionMethod):
 class ExplorativeSelectionMethod(BaseRandomSelectionMethod):
     def __call__(self, model, data_pool, **kwargs) -> Tuple[List[int], List[float]]:
         y_std = model.predict_uncertainty(data_pool)
+        print('selection batch info:', self.batch_size)
         idx = get_topn_idx(y_std, n=self.batch_size)
         acquisition = y_std[np.array(idx)].tolist()
         return idx, acquisition

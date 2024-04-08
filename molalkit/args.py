@@ -301,6 +301,8 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
     """the number of molecules in the training set to start forgetting data at."""
     forget_ratio: float = None
     """the percent of the full training set to start forgetting data."""
+    repeat: Literal['no_repeat'] = None
+    """prevents the same molecule from being selected from the training pool twice in a row (after being forgotten)"""
 
     @property
     def model_selector(self):
@@ -586,7 +588,10 @@ class ActiveLearningArgs(DatasetArgs, ModelArgs):
                     self._selection_method = ExploitiveSelectionMethod(target=self.exploitive_target, seed=self.seed)
             else:
                 raise ValueError('Unknown learning type %s' % self.learning_type)
-            self._selection_method.batch_size = self.batch_size
+            if self.repeat is not None:
+                self._selection_method.batch_size = 2*self.batch_size
+            else:
+                self._selection_method.batch_size = self.batch_size
         return self._selection_method
 
     @property
