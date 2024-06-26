@@ -1,6 +1,8 @@
 
-# MolALKit: A Toolkit for Active Learning of molecular data.
-This package is a toolkit for active learning of molecular data.
+# SMAL: Short-term Memory Active Learning.
+This package implements forgetting data during active learning to reduce computational and experimental cost, while ehancing performance and training set construction.
+
+This package was built on [MolALKit](https://github.com/RekerLab/MolALKit).
 
 ## Installation
 ```commandline
@@ -8,89 +10,14 @@ conda env create -f environment.yml
 conda activate molalkit
 ```
 
-## Usage
-[scripts](https://github.com/RekerLab/MolAlKit/tree/main/scripts) contains executable files to perform 
-active learning jobs.
+## Example
+Experiment: Applying SMAL to the HIV dataset with the Maximum Out-of-Bag Uncertainty forgetting protocol
 
-[examples](https://github.com/RekerLab/MolAlKit/tree/main/examples) contains multiple examples to use this package.
+Additional parameters: 20% introduced error, 50:50 scaffold random train:test split, 1554 forget size (training set size, when to begin forgetting)
 
-[model_config](https://github.com/RekerLab/MolAlKit/tree/main/model_config) contains the config files of machine 
-learning models.
-
-
-### Models
-#### Random Forest with Morgan fingerprints
 ```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
+python3 SMAL.py --data_public hiv --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_random --split_sizes 0.5 0.5 --evaluate_stride 1 --seed 3 --save_dir hiv-RF-Morgan-scaffold_random-explorative-max_oob_uncertainty-20-3 --n_jobs 1 --forget_size 1554 --forget_protocol max_oob_uncertainty --error_rate 0.2
 ```
 
-#### Logistic Regression with Morgan fingerprints
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/LogisticRegression_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### Gaussian Process Regression with Morgan fingerprints
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionValue_DotProductKerneL_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionUncertainty_DotProductKerneL_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-Use posterior uncertainty for classification.
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionUncertainty_DotProductKerneL_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### Multi-layer perceptron (MLP) with Morgan fingerprints
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/MLP_BinaryClassification_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/MLP_Regression_MVE_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/MLP_Regression_Evidential_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### D-MPNN
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/DMPNN_BinaryClassification_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/DMPNN_Regression_MVE_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/DMPNN_Regression_Evidential_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### D-MPNN + rdkit features
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/DMPNN_RDKIT_BinaryClassification_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/DMPNN_RDKIT_Regression_MVE_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/DMPNN_RDKIT_Regression_Evidential_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### GPR-MGK
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionUncertainty_MarginalizedGraphKerneL_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al --n_jobs 6
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionValue_MarginalizedGraphKerneL_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al --n_jobs 6
-python3 ActiveLearning.py --data_public freesolv --metrics rmse mae r2 --learning_type explorative --model_config_selector model_config/GaussianProcessRegressionUncertainty_MarginalizedGraphKerneL_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-#### SVM
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/SupportVectorMachine_DotProductKerneL_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al
-```
-
-## Yoked Learning
-Yoked Learning uses different models for selection and evaluation.
-```commandline
-python3 ActiveLearning.py --data_path alb/data/bace.csv --pure_columns mol --target_columns Class --dataset_type classification --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al --model_config_extra_evaluators model_config/MLP_BinaryClassification_Morgan_Config
-```
-
-## Checkpoint file, continue run, and extensions
-Stop at 10% and write checkpoint file every 10 iterations of active learning.
-```commandline
-python3 ActiveLearning.py --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector model_config/RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir test_al --stop_ratio 0.1 --save_cpt_stride 10
-```
-Continue the active learning to 20%.
-```commandline
-python3 ALContinue.py --save_dir test_al --stop_ratio 0.2
-```
-
-## Reevaluate a new model using an existing active learning trajectory
-```commandline
-python3 ReEvaluate.py --data_public bace --save_dir test_al --model_config_evaluator model_config/RandomForest_RdkitNorm_Config --evaluator_id 0 --evaluate_stride 10 --metrics roc-auc mcc accuracy precision recall f1_score 
-```
+## Active Learning and Other Usage
+More information can be found at [MolALKit](https://github.com/RekerLab/MolALKit).
