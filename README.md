@@ -6,8 +6,8 @@ This package was built on [MolALKit](https://github.com/RekerLab/MolALKit).
 
 ## Installation
 ```commandline
-conda env create -f environment.yml
-conda activate molalkit
+pip install numpy==1.22.3 git+https://gitlab.com/Xiangyan93/graphdot.git@feature/xy git+https://github.com/bp-kelley/descriptastorus git+https://github.com/Xiangyan93/chemprop.git@molalkit
+pip install mgktools molalkit
 ```
 
 ## Example
