@@ -1,6 +1,6 @@
 
-# SMAL: Short-term Memory Active Learning.
-This package implements forgetting data during active learning to reduce computational and experimental cost, while ehancing performance and training set construction.
+# Short-term Memory Active Learning (SMAL).
+As active learning campaigns progress, it has been observed that performance can decrease after a "turning point" of maximum performance. In standard active learning, data is continuously added in a linear fashion. It is hypothesized that this could be problematic since selection functions are likely imperfect, especially during early stages of active learning campaigns where data is limited leading to a poorer understanding of a particular domain. SMAL was developed to augment standard active learning approaches by implementing backward forgetting of training data based on various measures of sample utility. Forgetting data leads to restricted training set sizes making models more compact and less biased, while leading to equivalent or improved overall performance. Additionally, the re-integration of prior experimental data reduces labeling costs, and enhances training set diversity and quality.
 
 This package was built on [MolALKit](https://github.com/RekerLab/MolALKit).
 
