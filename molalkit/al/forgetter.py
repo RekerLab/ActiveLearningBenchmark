@@ -114,7 +114,7 @@ class MinOOBUncertaintyIncorrectForgetter(BaseRandomForgetter):
 
     @property
     def info(self) -> str:
-        return 'MinOOBUncertaintyInorrectForgetter'
+        return 'MinOOBUncertaintyIncorrectForgetter'
 
 
 class MinOOBUncertaintyIncorrectNoRepeat(BaseRandomForgetter):
@@ -214,7 +214,7 @@ class MaxOOBUncertaintyIncorrectForgetter(BaseRandomForgetter):
 
     @property
     def info(self) -> str:
-        return 'MaxOOBUncertaintyInorrectForgetter'
+        return 'MaxOOBUncertaintyIncorrectForgetter'
 
 
 class MinOOBErrorForgetter(BaseRandomForgetter):
