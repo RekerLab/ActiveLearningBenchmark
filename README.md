@@ -11,6 +11,7 @@ pip install mgktools molalkit
 Check the GPU CUDA requirements at [mgktools](https://github.com/Xiangyan93/mgktools) for marginalized graph kernel model.
 
 ## QuickStart
+GPU is required to support graph kernel. It will take about 10 minutes to set up the environment and run the demo.
 - [Google Colab notebook](https://colab.research.google.com/drive/11thNx7RkGbGMe_TgieWCEShYy-h32Khv?usp=sharing).
 
 ## Data
