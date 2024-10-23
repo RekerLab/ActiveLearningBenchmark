@@ -3,10 +3,15 @@
 This software package serves as a robust toolkit designed for the active learning of molecular data.
 
 ## Installation
+Python 3.10 is recommended
 ```
 pip install numpy==1.22.3 git+https://gitlab.com/Xiangyan93/graphdot.git@feature/xy git+https://github.com/bp-kelley/descriptastorus git+https://github.com/Xiangyan93/chemprop.git@molalkit
 pip install mgktools molalkit
 ```
+Check the GPU CUDA requirements at [mgktools](https://github.com/Xiangyan93/mgktools) for marginalized graph kernel model.
+
+## QuickStart
+- [Google Colab notebook](https://colab.research.google.com/drive/11thNx7RkGbGMe_TgieWCEShYy-h32Khv?usp=sharing).
 
 ## Data
 **MolALKit** currently supports active learning exclusively for single-task datasets, which can be either classification or regression tasks.
@@ -67,5 +72,4 @@ molalkit_run --data_public bace --metrics roc-auc mcc accuracy precision recall 
 ```
 
 ## Usage
-- [Google Colab notebook](https://colab.research.google.com/drive/11thNx7RkGbGMe_TgieWCEShYy-h32Khv?usp=sharing).
 - [Examples](https://github.com/RekerLab/MolAlKit/tree/main/examples).
