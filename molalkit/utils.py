@@ -74,13 +74,15 @@ def get_data(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
 
 def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
               dataset_type: Literal['regression', 'classification', 'multiclass'],
-              model: Literal['random_forest', 'naive_bayes', 'logistic_regression', 'gaussian_process', 'support_vector_machine', 'adaboost', 'xgboost'],
+              model: Literal['random_forest', 'naive_bayes', 'logistic_regression', 'gaussian_process_regression',
+                             'gaussian_process_classification', 'support_vector_machine', 'adaboost', 'xgboost', 
+                             'decision_tree', 'extra_trees', 'MultinomialNB', 'BernoulliNB', 'GaussianNB'],
               save_dir: str = None,
               data_path: str = None,
               smiles_columns: List[str] = None,
               target_columns: List[str] = None,
               loss_function: Literal['mse', 'bounded_mse', 'binary_cross_entropy', 'cross_entropy', 'mcc', 'sid',
-              'wasserstein', 'mve', 'evidential', 'dirichlet'] = None,
+                                     'wasserstein', 'mve', 'evidential', 'dirichlet'] = None,
               multiclass_num_classes: int = 3,
               features_generator=None,
               no_features_scaling: bool = False,
@@ -179,6 +181,13 @@ def get_model(data_format: Literal['mgktools', 'chemprop', 'fingerprints'],
             else:
                 from molalkit.models.xgboost.XGBClassifier import XGBClassifier
                 return XGBClassifier(booster=booster, n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, n_jobs=n_jobs, random_state=seed)
+        elif model == 'gradient_boosting':
+            if dataset_type == 'regression':
+                from molalkit.models.gradient_boosting.gradient_boosting import GradientBoostingRegressor
+                return GradientBoostingRegressor(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=seed)
+            else:
+                from molalkit.models.gradient_boosting.gradient_boosting import GradientBoostingClassifier
+                return GradientBoostingClassifier(n_estimators=n_estimators, max_depth=max_depth, learning_rate=learning_rate, random_state=seed)
         else:
             raise ValueError(f'unknown model: {model}')
     elif data_format == 'chemprop':
