@@ -3,15 +3,16 @@
 This software package serves as a robust toolkit designed for the active learning of molecular data.
 
 ## Installation
-Python 3.10 is recommended
+Python 3.10 is recommended.
+Check the GPU and CUDA requirements at [mgktools](https://github.com/Xiangyan93/mgktools) for marginalized graph kernel model.
 ```
 pip install numpy==1.22.3 git+https://gitlab.com/Xiangyan93/graphdot.git@feature/xy git+https://github.com/bp-kelley/descriptastorus git+https://github.com/Xiangyan93/chemprop.git@molalkit
 pip install mgktools molalkit
 ```
-Check the GPU CUDA requirements at [mgktools](https://github.com/Xiangyan93/mgktools) for marginalized graph kernel model.
 
 ## QuickStart
-GPU is required to support graph kernel. It will take about 10 minutes to set up the environment and run the demo.
+GPU is required to support graph kernel. 
+It will take about 10 minutes to set up the environment and run the demo.
 - [Google Colab notebook](https://colab.research.google.com/drive/11thNx7RkGbGMe_TgieWCEShYy-h32Khv?usp=sharing).
 
 ## Data
@@ -53,24 +54,21 @@ The following arguments are required for data split:
 --split_type <random/scaffold_order/scaffold_random> --split_sizes <active learning set ratio> <validation set ratio> --seed <random seed>
 ```
 
-## Surrogate Model
-The surrogate model used in this package is described in a json config file. 
-Here is the list of built-in surrogate models:
+## Machine Learning Model
+The machine learning model used in this package is described in a json config file. 
+Here is the list of built-in machine learning models:
 ```
 from molalkit.models.configs import AVAILABLE_MODELS
 print(AVAILABLE_MODELS)
 ```
 The model config files are placed in [molalkit/models/configs](https://github.com/RekerLab/MolALKit/tree/main/molalkit/models/configs). 
-The following arguments are required for choosing a surrogate model:
+The following arguments are required for choosing a machine learning model:
 ```
 --model_config_selector <model_config_file>
 ```
 
 ## First Example
-Here's an example of running active learning using MolALKit with the BACE dataset, a 50:50 scaffold split, and Random Forest as the surrogate model:
+Here's an example of running active learning using MolALKit with the BACE dataset, a 50:50 scaffold split, and Random Forest as the machine learning model:
 ```
 molalkit_run --data_public bace --metrics roc-auc mcc accuracy precision recall f1_score --learning_type explorative --model_config_selector RandomForest_Morgan_Config --split_type scaffold_order --split_sizes 0.5 0.5 --evaluate_stride 10 --seed 0 --save_dir bace
 ```
-
-## Usage
-- [Examples](https://github.com/RekerLab/MolAlKit/tree/main/examples).
