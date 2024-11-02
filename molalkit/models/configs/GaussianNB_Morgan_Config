@@ -1,6 +1,6 @@
 {
     "data_format": "fingerprints",
-    "model": "naive_bayes",
+    "model": "GaussianNB",
     "fingerprints_class": [
         "morgan"
     ],
